@@ -16,3 +16,13 @@ export {
   type Patient,
   type UpdatePatientInput
 } from "./patient.js";
+
+export {
+  createDoctorSchema,
+  doctorListSchema,
+  doctorSchema,
+  updateDoctorSchema,
+  type CreateDoctorInput,
+  type Doctor,
+  type UpdateDoctorInput
+} from "./doctor.js";
