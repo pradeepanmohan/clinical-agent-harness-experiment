@@ -37,12 +37,25 @@ GitHub Issue
 -> Sandcastle creates an isolated Docker worktree branch
 -> Claude Code implements exactly one issue
 -> workflow pushes the Sandcastle branch
--> workflow opens a draft PR
+-> workflow opens or reuses a draft PR through the REST pulls API
 -> verify.yml runs on the PR
 -> human reviews and merges
 ```
 
 This mode follows Matt Pocock's AFK-agent-loop direction more closely because the runner owns git directly. The agent does not rely on Codex Cloud's UI publication gate.
+
+### Validated lesson
+
+The Sandcastle runner flow is now validated end to end. Issue #17 triggered successful workflow run `27839376514`; the runner created branch `sandcastle/issue-17-sandcastle-token-updated-pr-publication-smoke-test`, opened draft PR #18, and the PR's independent `verify` check passed.
+
+Key operational lessons:
+
+- the Docker image must stay alive for Sandcastle `docker exec`,
+- `/home/agent/.claude` must be writable for Claude Code session capture,
+- package-manager and git home variables must be forced in the container setup,
+- PR publication should use the REST pulls API, not `gh pr create`,
+- PR publication should be idempotent and reuse an open PR for the same branch,
+- the fine-grained PAT must include `Contents: read/write`, `Issues: read/write`, `Pull requests: read/write`, and `Metadata: read`.
 
 See `docs/SANDCASTLE.md` for setup and operation.
 
@@ -116,5 +129,5 @@ The comparison is:
 
 ```txt
 Codex Cloud mode: labels trigger Codex, human publishes PR, GitHub Actions verifies.
-Sandcastle mode: labels trigger an Actions-hosted agent runner, runner publishes draft PR, GitHub Actions verifies.
+Sandcastle mode: labels trigger an Actions-hosted agent runner, runner publishes draft PR, GitHub Actions verifies, human merges.
 ```

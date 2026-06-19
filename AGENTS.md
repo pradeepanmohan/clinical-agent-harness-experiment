@@ -38,8 +38,9 @@ The Actions-hosted Sandcastle runner is triggered by `agent:sandcastle`.
 
 - The workflow runs Sandcastle in a Docker worktree.
 - The agent must implement exactly one issue and commit to the Sandcastle branch.
-- The workflow pushes the branch and opens a draft PR.
+- The workflow pushes the branch and opens or reuses a draft PR through the GitHub REST pulls API.
 - The draft PR remains a human review/acceptance/merge gate.
+- Current experiment result: Sandcastle is validated end to end when `CLAUDE_CODE_OAUTH_TOKEN` and a `CODEX_DISPATCH_TOKEN` with Contents, Issues, Pull Requests, and Metadata permissions are configured.
 
 ## Quality bar
 
