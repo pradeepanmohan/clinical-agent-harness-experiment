@@ -1,0 +1,55 @@
+{
+  "goal": "Build a small Clinical Management App while testing a Codex powered agent harness workflow.",
+  "principle": "The agent is amnesiac, but the filesystem is not.",
+  "tasks": [
+    {
+      "id": "S00",
+      "title": "Scaffold monorepo and harness foundation",
+      "status": "pending",
+      "priority": 1,
+      "taskFile": ".harness/tasks/S00-scaffold.md"
+    },
+    {
+      "id": "S01",
+      "title": "Implement Patient CRUD vertical slice",
+      "status": "pending",
+      "priority": 2,
+      "taskFile": ".harness/tasks/S01-patient-crud.md"
+    },
+    {
+      "id": "S02",
+      "title": "Implement Doctor CRUD vertical slice",
+      "status": "pending",
+      "priority": 3,
+      "taskFile": ".harness/tasks/S02-doctor-crud.md"
+    },
+    {
+      "id": "S03",
+      "title": "Implement appointment scheduling",
+      "status": "pending",
+      "priority": 4,
+      "taskFile": ".harness/tasks/S03-appointments.md"
+    },
+    {
+      "id": "S04",
+      "title": "Implement today's appointments dashboard",
+      "status": "pending",
+      "priority": 5,
+      "taskFile": ".harness/tasks/S04-today-dashboard.md"
+    },
+    {
+      "id": "S05",
+      "title": "Implement clinical notes",
+      "status": "pending",
+      "priority": 6,
+      "taskFile": ".harness/tasks/S05-clinical-notes.md"
+    },
+    {
+      "id": "S06",
+      "title": "Harden harness checks and review loop",
+      "status": "pending",
+      "priority": 7,
+      "taskFile": ".harness/tasks/S06-harness-hardening.md"
+    }
+  ]
+}

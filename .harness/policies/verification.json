@@ -1,0 +1,10 @@
+{
+  "commands": [
+    "pnpm lint",
+    "pnpm typecheck",
+    "pnpm test",
+    "pnpm build"
+  ],
+  "evidenceRequired": true,
+  "humanMergeRequired": true
+}

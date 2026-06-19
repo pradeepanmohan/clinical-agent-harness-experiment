@@ -1,0 +1,10 @@
+{
+  "requiredSections": [
+    "Summary",
+    "Files changed",
+    "Commands run",
+    "Test results",
+    "Known limitations",
+    "Next suggested task"
+  ]
+}

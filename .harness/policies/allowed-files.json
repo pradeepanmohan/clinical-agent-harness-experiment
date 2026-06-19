@@ -1,0 +1,28 @@
+{
+  "S00": [
+    "package.json",
+    "pnpm-workspace.yaml",
+    "turbo.json",
+    "tsconfig.base.json",
+    ".env.example",
+    "apps/web/**",
+    "apps/api/**",
+    "packages/db/**",
+    "packages/shared/**",
+    "scripts/**",
+    ".harness/evidence/S00-scaffold.md",
+    ".harness/PROGRESS.md",
+    ".github/workflows/verify.yml"
+  ],
+  "S01": [
+    "apps/api/src/patients/**",
+    "apps/api/src/app.module.ts",
+    "apps/web/src/app/patients/**",
+    "packages/db/src/schema.ts",
+    "packages/db/src/migrations/**",
+    "packages/shared/src/patient.ts",
+    "tests/**",
+    ".harness/evidence/S01-patient-crud.md",
+    ".harness/PROGRESS.md"
+  ]
+}

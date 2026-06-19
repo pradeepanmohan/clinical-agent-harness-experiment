@@ -1,0 +1,52 @@
+name: Agent Review
+
+on:
+  workflow_dispatch:
+    inputs:
+      task_id:
+        description: "Harness task id to review"
+        required: true
+      task_file:
+        description: "Task file path"
+        required: true
+
+jobs:
+  codex-review:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Codex review
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          TASK_ID: ${{ inputs.task_id }}
+          TASK_FILE: ${{ inputs.task_file }}
+        run: |
+          npm install -g @openai/codex
+          codex exec "
+          Review this repository diff for task ${TASK_ID}.
+
+          Read:
+          - ${TASK_FILE}
+          - docs/HARNESS.md
+          - docs/WORKFLOW.md
+          - .harness/PROGRESS.md
+
+          Check:
+          - acceptance criteria
+          - out of scope changes
+          - allowed files
+          - test quality
+          - overengineering
+          - evidence quality
+
+          Return blockers, warnings, and approval notes.
+          Do not modify files.
+          "
