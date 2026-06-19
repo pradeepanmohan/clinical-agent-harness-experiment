@@ -153,6 +153,7 @@ jobs:
       - name: Open draft PR
         id: pr
         env:
+          GH_TOKEN: ${{ secrets.CODEX_DISPATCH_TOKEN }}
           ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
           ISSUE_TITLE: ${{ steps.context.outputs.title }}
           BRANCH: ${{ steps.branch.outputs.name }}
