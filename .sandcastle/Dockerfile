@@ -10,11 +10,15 @@ RUN apt-get update \
 RUN corepack enable \
   && npm install -g @anthropic-ai/claude-code
 
-RUN mkdir -p /home/agent \
-  && chown -R ${AGENT_UID}:${AGENT_GID} /home/agent
+# Sandcastle runs containers as the host runner's numeric UID/GID. On GitHub
+# Actions those IDs may not have a passwd entry, and a baked /home/<user>
+# can be unwritable if UID/GID assumptions drift. Use a world-writable runtime
+# home/config location so Sandcastle's startup `git config --global` works for
+# any numeric runner user.
+RUN mkdir -p /tmp/agent-home \
+  && chmod 0777 /tmp/agent-home
 
-ENV HOME=/home/agent
+ENV HOME=/tmp/agent-home
+ENV GIT_CONFIG_GLOBAL=/tmp/agent-home/.gitconfig
 USER ${AGENT_UID}:${AGENT_GID}
 WORKDIR /workspace
-
-RUN git config --global --add safe.directory '*'
