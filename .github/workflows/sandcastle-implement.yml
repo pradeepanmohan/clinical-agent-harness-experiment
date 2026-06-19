@@ -169,7 +169,14 @@ jobs:
           } > "$body_file"
           title="Sandcastle #${ISSUE_NUMBER}: ${ISSUE_TITLE}"
           title="${title:0:256}"
-          pr_url=$(gh pr create --draft --base main --head "$BRANCH" --title "$title" --body-file "$body_file")
+          pr_url=$(gh api "repos/${GH_REPO}/pulls" \
+            --method POST \
+            -f title="$title" \
+            -f head="$BRANCH" \
+            -f base="main" \
+            -f body="$(cat "$body_file")" \
+            -F draft=true \
+            --jq .html_url)
           echo "url=$pr_url" >> "$GITHUB_OUTPUT"
           gh issue comment "$ISSUE_NUMBER" --body "Sandcastle opened draft PR: $pr_url"
 
