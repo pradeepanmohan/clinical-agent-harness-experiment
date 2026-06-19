@@ -1,6 +1,7 @@
 {
   "S00": [
     "package.json",
+    "pnpm-lock.yaml",
     "pnpm-workspace.yaml",
     "turbo.json",
     "tsconfig.base.json",
@@ -12,7 +13,8 @@
     "scripts/**",
     ".harness/evidence/S00-scaffold.md",
     ".harness/PROGRESS.md",
-    ".github/workflows/verify.yml"
+    ".github/workflows/verify.yml",
+    ".harness/TASKS.json"
   ],
   "S01": [
     "apps/api/src/patients/**",
@@ -23,6 +25,7 @@
     "packages/shared/src/patient.ts",
     "tests/**",
     ".harness/evidence/S01-patient-crud.md",
-    ".harness/PROGRESS.md"
+    ".harness/PROGRESS.md",
+    ".harness/TASKS.json"
   ]
 }
