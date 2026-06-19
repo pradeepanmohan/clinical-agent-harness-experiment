@@ -169,14 +169,24 @@ jobs:
           } > "$body_file"
           title="Sandcastle #${ISSUE_NUMBER}: ${ISSUE_TITLE}"
           title="${title:0:256}"
-          pr_url=$(gh api "repos/${GH_REPO}/pulls" \
-            --method POST \
-            -f title="$title" \
-            -f head="$BRANCH" \
-            -f base="main" \
-            -f body="$(cat "$body_file")" \
-            -F draft=true \
-            --jq .html_url)
+          owner="${GH_REPO%%/*}"
+          existing_url=$(gh api "repos/${GH_REPO}/pulls" \
+            --method GET \
+            -f state="open" \
+            -f head="${owner}:${BRANCH}" \
+            --jq '.[0].html_url // ""')
+          if [ -n "$existing_url" ]; then
+            pr_url="$existing_url"
+          else
+            pr_url=$(gh api "repos/${GH_REPO}/pulls" \
+              --method POST \
+              -f title="$title" \
+              -f head="$BRANCH" \
+              -f base="main" \
+              -f body="$(cat "$body_file")" \
+              -F draft=true \
+              --jq .html_url)
+          fi
           echo "url=$pr_url" >> "$GITHUB_OUTPUT"
           gh issue comment "$ISSUE_NUMBER" --body "Sandcastle opened draft PR: $pr_url"
 
