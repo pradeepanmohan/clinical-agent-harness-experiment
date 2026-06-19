@@ -13,9 +13,19 @@ Build the smallest correct slice described by the active `.harness/tasks/*.md` f
 3. Prefer TDD for new behavior.
 4. Run the verification commands named in the task.
 5. Write an evidence file under `.harness/evidence/` before claiming done.
-6. Do not merge your own PR.
-7. Do not add auth, billing, insurance, or complex RBAC unless a task explicitly asks for it.
-8. Keep diffs small enough for human review.
+6. Open or update a pull request for the task.
+7. Do not merge your own PR.
+8. Do not add auth, billing, insurance, or complex RBAC unless a task explicitly asks for it.
+9. Keep diffs small enough for human review.
+
+## Codex Cloud label flow
+
+This repository uses the GitHub-connected Codex Subscription / Codex Cloud flow, not an API-key runner inside GitHub Actions.
+
+- `agent:implement` on an issue asks `@codex` to implement that issue.
+- `agent:review` on a pull request asks `@codex review` to review that PR.
+- GitHub Actions may dispatch comments and verify PRs, but must not execute Codex with `OPENAI_API_KEY` as the primary harness path.
+- Codex should work from the GitHub issue/PR context, follow this file, write evidence, and leave merge/acceptance to the human gate.
 
 ## Quality bar
 
