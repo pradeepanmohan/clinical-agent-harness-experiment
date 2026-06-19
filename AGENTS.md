@@ -18,14 +18,28 @@ Build the smallest correct slice described by the active `.harness/tasks/*.md` f
 8. Do not add auth, billing, insurance, or complex RBAC unless a task explicitly asks for it.
 9. Keep diffs small enough for human review.
 
-## Codex Cloud label flow
+## Agent harness modes
 
-This repository uses the GitHub-connected Codex Subscription / Codex Cloud flow, not an API-key runner inside GitHub Actions.
+This repository currently compares two agent execution models.
+
+### Codex Cloud label flow
+
+The GitHub-connected Codex Subscription / Codex Cloud flow is triggered by `agent:implement` and `agent:review`.
 
 - `agent:implement` on an issue asks `@codex` to implement that issue.
 - `agent:review` on a pull request asks `@codex review` to review that PR.
 - GitHub Actions may dispatch comments and verify PRs, but must not execute Codex with `OPENAI_API_KEY` as the primary harness path.
 - Codex should work from the GitHub issue/PR context, follow this file, write evidence, and leave merge/acceptance to the human gate.
+- Current experiment result: Codex Cloud can execute tasks, but PR publication may require the Codex UI **Create PR** gate.
+
+### Sandcastle runner flow
+
+The Actions-hosted Sandcastle runner is triggered by `agent:sandcastle`.
+
+- The workflow runs Sandcastle in a Docker worktree.
+- The agent must implement exactly one issue and commit to the Sandcastle branch.
+- The workflow pushes the branch and opens a draft PR.
+- The draft PR remains a human review/acceptance/merge gate.
 
 ## Quality bar
 
