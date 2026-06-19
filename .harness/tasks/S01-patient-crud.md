@@ -14,6 +14,7 @@ Read these files first:
 - `docs/ARCHITECTURE.md`
 - `docs/HARNESS.md`
 - `.harness/PROGRESS.md`
+- `.harness/TASKS.json`
 - S00 evidence file
 
 ## Allowed changes
@@ -27,6 +28,7 @@ Read these files first:
 - `tests/**`
 - `.harness/evidence/S01-patient-crud.md`
 - `.harness/PROGRESS.md`
+- `.harness/TASKS.json`
 
 ## Acceptance criteria
 

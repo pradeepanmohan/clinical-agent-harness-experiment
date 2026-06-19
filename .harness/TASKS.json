@@ -5,7 +5,7 @@
     {
       "id": "S00",
       "title": "Scaffold monorepo and harness foundation",
-      "status": "pending",
+      "status": "completed",
       "priority": 1,
       "taskFile": ".harness/tasks/S00-scaffold.md"
     },

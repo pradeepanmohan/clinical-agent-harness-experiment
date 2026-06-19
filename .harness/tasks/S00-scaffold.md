@@ -19,6 +19,7 @@ Read these files first:
 ## Allowed changes
 
 - `package.json`
+- `pnpm-lock.yaml`
 - `pnpm-workspace.yaml`
 - `turbo.json`
 - `tsconfig.base.json`
@@ -30,6 +31,7 @@ Read these files first:
 - `scripts/**`
 - `.harness/evidence/S00-scaffold.md`
 - `.harness/PROGRESS.md`
+- `.harness/TASKS.json`
 - `.github/workflows/verify.yml`
 
 ## Acceptance criteria
