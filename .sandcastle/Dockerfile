@@ -10,13 +10,11 @@ RUN apt-get update \
 RUN corepack enable \
   && npm install -g @anthropic-ai/claude-code
 
-# Sandcastle runs containers as the host runner's numeric UID/GID. On GitHub
-# Actions those IDs may not have a passwd entry, and a baked /home/<user>
-# can be unwritable if UID/GID assumptions drift. Use a world-writable runtime
-# home/config location so Sandcastle's startup `git config --global` works for
-# any numeric runner user.
-RUN mkdir -p /tmp/agent-home \
-  && chmod 0777 /tmp/agent-home
+# Claude Code writes session state under /home/agent/.claude even when HOME is
+# overridden. Make that path writable for arbitrary GitHub Actions UID/GID users
+# so Bash/tool execution and Sandcastle session capture both work.
+RUN mkdir -p /home/agent/.claude /tmp/agent-home \
+  && chmod -R 0777 /home/agent /tmp/agent-home
 
 ENV HOME=/tmp/agent-home
 ENV GIT_CONFIG_GLOBAL=/tmp/agent-home/.gitconfig
