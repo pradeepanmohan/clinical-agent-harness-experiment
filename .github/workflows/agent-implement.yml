@@ -23,7 +23,7 @@ jobs:
 
       - uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 9.1.2
 
       - uses: actions/setup-node@v4
         with:
@@ -32,6 +32,13 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Check Codex secret
+        run: |
+          if [ -z "${{ secrets.OPENAI_API_KEY }}" ]; then
+            echo "OPENAI_API_KEY repository secret is required before running Codex in GitHub Actions."
+            exit 1
+          fi
+
       - name: Run Codex for one bounded task
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -39,7 +46,7 @@ jobs:
           TASK_FILE: ${{ inputs.task_file }}
         run: |
           npm install -g @openai/codex
-          codex exec "
+          codex exec -C . --sandbox workspace-write --ignore-rules "
           You are executing one constrained agent harness task.
 
           Read these files first:
@@ -48,7 +55,9 @@ jobs:
           - docs/ARCHITECTURE.md
           - docs/HARNESS.md
           - docs/WORKFLOW.md
+          - .harness/TASKS.json
           - .harness/PROGRESS.md
+          - .harness/evidence/S01-patient-crud.md
           - ${TASK_FILE}
 
           Rules:
@@ -58,6 +67,7 @@ jobs:
           - Run verification commands.
           - Write evidence to .harness/evidence/${TASK_ID}.md or the path named by the task file.
           - Stop after implementation and evidence.
+          - Do not push.
           - Do not merge.
           "
 

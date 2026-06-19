@@ -28,5 +28,19 @@
     ".harness/evidence/S01-patient-crud.md",
     ".harness/PROGRESS.md",
     ".harness/TASKS.json"
+  ],
+  "S02": [
+    "apps/api/src/doctors/**",
+    "apps/api/src/app.module.ts",
+    "apps/web/src/app/doctors/**",
+    "packages/db/src/schema.ts",
+    "packages/db/src/migrations/**",
+    "packages/shared/src/index.ts",
+    "packages/shared/src/doctor.ts",
+    "tests/**",
+    ".harness/evidence/S02-doctor-crud.md",
+    ".harness/PROGRESS.md",
+    ".harness/TASKS.json",
+    ".harness/policies/allowed-files.json"
   ]
 }
