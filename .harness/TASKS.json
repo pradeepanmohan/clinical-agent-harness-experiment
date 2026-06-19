@@ -19,7 +19,7 @@
     {
       "id": "S02",
       "title": "Implement Doctor CRUD vertical slice",
-      "status": "pending",
+      "status": "completed",
       "priority": 3,
       "taskFile": ".harness/tasks/S02-doctor-crud.md"
     },
