@@ -36,3 +36,19 @@ export const doctors = pgTable("doctors", {
     .defaultNow()
     .notNull()
 });
+
+
+export const appointments = pgTable("appointments", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  patientId: uuid("patient_id").notNull(),
+  doctorId: uuid("doctor_id").notNull(),
+  scheduledAt: timestamp("scheduled_at", { withTimezone: true }).notNull(),
+  status: varchar("status", { length: 40 }).notNull().default("scheduled"),
+  reason: varchar("reason", { length: 500 }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull()
+});

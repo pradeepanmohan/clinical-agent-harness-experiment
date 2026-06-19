@@ -2,9 +2,9 @@
 
 ## Current state
 
-S00 scaffold, S01 Patient CRUD, and S02 Doctor CRUD have been implemented and verified locally.
+S00 scaffold, S01 Patient CRUD, S02 Doctor CRUD, and S03 Appointment Scheduling have been implemented and verified locally.
 
-The repository now has a minimal pnpm/Turbo monorepo with Next.js, NestJS, shared validation, DB scaffold packages, the first Patient CRUD vertical slice, and the Doctor CRUD vertical slice.
+The repository now has a minimal pnpm/Turbo monorepo with Next.js, NestJS, shared validation, DB scaffold packages, Patient CRUD, Doctor CRUD, and Appointment Scheduling vertical slices.
 
 ## Completed setup
 
@@ -38,9 +38,19 @@ The repository now has a minimal pnpm/Turbo monorepo with Next.js, NestJS, share
 - Added API tests covering create, list, get by id, update, missing id, required full name, required specialty, and HTTP runtime wiring.
 - Ran S02 verification commands and wrote `.harness/evidence/S02-doctor-crud.md`.
 
+
+## Completed S03
+
+- Added shared appointment validation and DTO types.
+- Added Drizzle `appointments` table schema and SQL migration.
+- Added NestJS `AppointmentsModule`, controller, and in-memory service for creating appointments and updating appointment status.
+- Appointment creation verifies existing patient and doctor IDs through the existing patient and doctor services.
+- Added API tests covering create, missing patient, missing doctor, past scheduling rejection, default scheduled status, status updates, and HTTP runtime wiring.
+- Ran S03 verification commands and wrote `.harness/evidence/S03-appointments.md`.
+
 ## Next task
 
-S03: Implement appointment scheduling.
+S04: Implement today's appointments dashboard.
 
 ## Handoff note
 
@@ -53,7 +63,7 @@ A future Codex run should start by reading:
 - `docs/WORKFLOW.md`
 - `.harness/TASKS.json`
 - `.harness/PROGRESS.md`
-- `.harness/tasks/S03-appointments.md`
-- `.harness/evidence/S02-doctor-crud.md`
+- `.harness/tasks/S04-today-dashboard.md`
+- `.harness/evidence/S03-appointments.md`
 
-S02 verification passed locally. The S01 and S02 API services store records in memory; DB schema and migrations exist, but runtime database-backed repositories remain future work.
+S03 verification passed locally. The S01, S02, and S03 API services store records in memory; DB schema and migrations exist, but runtime database-backed repositories remain future work.
