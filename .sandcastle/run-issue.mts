@@ -87,7 +87,16 @@ const result = await run({
       CLAUDE_CODE_OAUTH_TOKEN: claudeToken,
     },
   }),
-  sandbox: docker({ imageName }),
+  sandbox: docker({
+    imageName,
+    env: {
+      HOME: "/tmp/agent-home",
+      GIT_CONFIG_GLOBAL: "/tmp/agent-home/.gitconfig",
+      COREPACK_HOME: "/tmp/agent-home/.cache/corepack",
+      PNPM_HOME: "/tmp/agent-home/.local/share/pnpm",
+      PATH: "/tmp/agent-home/.local/share/pnpm:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    },
+  }),
   branchStrategy: {
     type: "branch",
     branch,
@@ -96,8 +105,8 @@ const result = await run({
   hooks: {
     sandbox: {
       onSandboxReady: [
-        { command: "git config --global --add safe.directory '*'" },
-        { command: "corepack enable && pnpm install --frozen-lockfile" },
+        { command: "mkdir -p /tmp/agent-home/.cache/corepack /tmp/agent-home/.local/share/pnpm && git config --global --add safe.directory '*'" },
+        { command: "export HOME=/tmp/agent-home GIT_CONFIG_GLOBAL=/tmp/agent-home/.gitconfig COREPACK_HOME=/tmp/agent-home/.cache/corepack PNPM_HOME=/tmp/agent-home/.local/share/pnpm PATH=/tmp/agent-home/.local/share/pnpm:$PATH && corepack enable && pnpm install --frozen-lockfile" },
       ],
     },
   },
