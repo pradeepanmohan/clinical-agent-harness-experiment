@@ -2,9 +2,9 @@
 
 ## Current state
 
-S00 scaffold has been implemented and verified locally.
+S00 scaffold and S01 Patient CRUD have been implemented and verified locally.
 
-The repository now has a minimal pnpm/Turbo monorepo with Next.js, NestJS, shared validation, and DB scaffold packages. No product CRUD behavior has been implemented yet.
+The repository now has a minimal pnpm/Turbo monorepo with Next.js, NestJS, shared validation, DB scaffold packages, and the first Patient CRUD vertical slice.
 
 ## Completed setup
 
@@ -20,9 +20,18 @@ The repository now has a minimal pnpm/Turbo monorepo with Next.js, NestJS, share
 - Added DB package with initial Drizzle PostgreSQL scaffold.
 - Ran S00 verification commands and wrote `.harness/evidence/S00-scaffold.md`.
 
+## Completed S01
+
+- Added shared patient validation and DTO types.
+- Added Drizzle `patients` table schema and SQL migration.
+- Added NestJS `PatientsModule`, controller, and in-memory service for create, list, get by id, and update.
+- Added patient list, create form, and detail pages in the Next.js app.
+- Added API tests covering create, list, get by id, update, invalid email, missing id, and required full name.
+- Ran S01 verification commands and wrote `.harness/evidence/S01-patient-crud.md`.
+
 ## Next task
 
-S01: Implement Patient CRUD vertical slice.
+S02: Implement Doctor CRUD vertical slice.
 
 ## Handoff note
 
@@ -35,7 +44,7 @@ A future Codex run should start by reading:
 - `docs/WORKFLOW.md`
 - `.harness/TASKS.json`
 - `.harness/PROGRESS.md`
-- `.harness/tasks/S01-patient-crud.md`
-- `.harness/evidence/S00-scaffold.md`
+- `.harness/tasks/S02-doctor-crud.md`
+- `.harness/evidence/S01-patient-crud.md`
 
-S00 verification passed locally. A review found the original S00 policy forgot `pnpm-lock.yaml` and `.harness/TASKS.json`; the policy was corrected, the lockfile was kept, and CI now uses `pnpm install --frozen-lockfile`.
+S01 verification passed locally. The S01 API service stores patients in memory; DB schema and migration were added, but runtime database-backed repositories remain future work.

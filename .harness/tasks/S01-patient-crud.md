@@ -25,6 +25,7 @@ Read these files first:
 - `packages/db/src/schema.ts`
 - `packages/db/src/migrations/**`
 - `packages/shared/src/patient.ts`
+- `packages/shared/src/index.ts`
 - `tests/**`
 - `.harness/evidence/S01-patient-crud.md`
 - `.harness/PROGRESS.md`

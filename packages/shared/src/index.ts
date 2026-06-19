@@ -6,3 +6,13 @@ export const healthCheckSchema = z.object({
 });
 
 export type HealthCheck = z.infer<typeof healthCheckSchema>;
+
+export {
+  createPatientSchema,
+  patientListSchema,
+  patientSchema,
+  updatePatientSchema,
+  type CreatePatientInput,
+  type Patient,
+  type UpdatePatientInput
+} from "./patient.js";
