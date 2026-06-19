@@ -5,7 +5,6 @@ on:
     types: [labeled]
 
 permissions:
-  issues: write
   contents: read
 
 jobs:
@@ -14,9 +13,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Check Codex dispatch token exists
+        env:
+          CODEX_DISPATCH_TOKEN: ${{ secrets.CODEX_DISPATCH_TOKEN }}
+        run: |
+          if [ -z "$CODEX_DISPATCH_TOKEN" ]; then
+            echo "CODEX_DISPATCH_TOKEN is missing. Add a fine-grained PAT with Issues: write for this repository."
+            exit 1
+          fi
+
       - name: Ask Codex to implement issue
         uses: actions/github-script@v7
         with:
+          github-token: ${{ secrets.CODEX_DISPATCH_TOKEN }}
           script: |
             const issue = context.payload.issue;
 
@@ -35,16 +44,22 @@ jobs:
             - latest relevant evidence file under .harness/evidence/
             - the task file named in this issue, if present
 
-            Rules:
+            Required GitHub output:
+            - Create a new branch from main.
             - Implement only the task described in this issue.
+            - Commit your changes to that branch.
+            - Open a pull request against main.
+            - Link this issue in the pull request body.
+            - Do not merge.
+
+            Rules:
             - Respect the task's allowed-files list.
             - If the allowlist is incomplete, make the smallest policy correction and document it in evidence.
             - Prefer TDD for new behavior.
             - Run pnpm lint, pnpm typecheck, pnpm test, and pnpm build.
             - Include framework-level smoke coverage when changing NestJS routes/controllers/modules.
             - Write evidence under .harness/evidence/.
-            - Open a pull request.
-            - Do not merge.
+            - If you cannot publish a branch or PR, say so explicitly and include the patch/diff in the task result.
 
             Issue title: ${issue.title}`;
 

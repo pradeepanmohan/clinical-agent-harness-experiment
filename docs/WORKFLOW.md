@@ -61,7 +61,9 @@ Write the task file with:
 
 Create or update a GitHub issue for one task and apply `agent:implement`.
 
-The dispatcher workflow comments with bounded `@codex` instructions. Codex Cloud should use the connected GitHub repo context to implement the issue.
+The dispatcher workflow comments with bounded `@codex` instructions using `CODEX_DISPATCH_TOKEN`, a fine-grained GitHub token stored as a repository Actions secret. This avoids `github-actions[bot]` authored comments, which may be ignored by Codex Cloud mention triggers.
+
+The dispatch identity needs only enough access to comment on issues and pull requests. Codex Cloud should use the connected GitHub repo context to implement the issue, create a branch, and open a pull request against `main`.
 
 ### 4. Execute
 

@@ -5,7 +5,6 @@ on:
     types: [labeled]
 
 permissions:
-  pull-requests: write
   contents: read
 
 jobs:
@@ -14,9 +13,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Check Codex dispatch token exists
+        env:
+          CODEX_DISPATCH_TOKEN: ${{ secrets.CODEX_DISPATCH_TOKEN }}
+        run: |
+          if [ -z "$CODEX_DISPATCH_TOKEN" ]; then
+            echo "CODEX_DISPATCH_TOKEN is missing. Add a fine-grained PAT with Issues/Pull requests write access for this repository."
+            exit 1
+          fi
+
       - name: Ask Codex to review pull request
         uses: actions/github-script@v7
         with:
+          github-token: ${{ secrets.CODEX_DISPATCH_TOKEN }}
           script: |
             const pullRequest = context.payload.pull_request;
 
