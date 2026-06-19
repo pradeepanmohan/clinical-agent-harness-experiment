@@ -22,3 +22,7 @@ ENV HOME=/tmp/agent-home
 ENV GIT_CONFIG_GLOBAL=/tmp/agent-home/.gitconfig
 USER ${AGENT_UID}:${AGENT_GID}
 WORKDIR /workspace
+
+# Sandcastle starts the container, then executes commands inside it. Keep the
+# sandbox alive for docker exec.
+ENTRYPOINT ["sleep", "infinity"]
