@@ -82,6 +82,7 @@ The repository now has a minimal pnpm/Turbo monorepo with Next.js, NestJS, share
 - Annotated the separate Sandcastle review workflow as the S06 review-loop gate.
 - Documented the manual override path in `docs/HARNESS.md` and `docs/WORKFLOW.md`.
 - Wrote `.harness/evidence/S06-harness-hardening.md`.
+- Completed strict no-manual-retrigger automation proof (issue #39) after review artifact recovery fix, documenting the full loop sequence in `docs/HARNESS.md`.
 
 ## Next task
 

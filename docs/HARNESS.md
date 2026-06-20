@@ -82,6 +82,21 @@ A human may override the harness gate only by making an explicit follow-up commi
 - why the change is in scope for the task,
 - which verification command was rerun after the override.
 
+## Strict automation loop validation
+
+After the review artifact recovery fix (PR #38), the harness can run a complete automation sequence without manual intervention:
+
+1. `agent:implement` label triggers implementation
+2. Harness checks enforce discipline gates
+3. PR verify check runs independently
+4. `agent:review` automatically added after verify passes
+5. Review workflow posts structured findings
+6. If review returns COMMENT or REQUEST_CHANGES, `agent:fix` automatically added
+7. Fix implementation runs on same branch
+8. Loop repeats until APPROVE or safety cap (3 non-approve reviews)
+
+This strict loop requires no manual branch edits, no manual review posting, and no manual label re-triggers after the initial `agent:implement`.
+
 ## Failure handling
 
 If a task fails:

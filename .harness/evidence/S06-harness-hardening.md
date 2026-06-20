@@ -50,3 +50,30 @@ Key observed results:
 ## Result
 
 S06 implementation is ready for PR verification and Sandcastle review. Human final review and merge remain the terminal gate.
+
+---
+
+## S06 Strict No-Manual-Retrigger Proof (Issue #39)
+
+### Proof goal
+
+Validate the full automation loop from fresh `main` after PR #38 review artifact recovery fix, without manual intervention.
+
+### Documentation updates
+
+- Added strict automation loop validation section to `docs/HARNESS.md` documenting the 8-step sequence
+- Updated `.harness/PROGRESS.md` to record this proof run
+
+### Verification (2026-06-20)
+
+All verification commands passed:
+
+- `pnpm harness:check`: Passed for S06 with 2 changed files
+- `pnpm lint`: 4/4 packages successful
+- `pnpm typecheck`: 5/5 tasks successful  
+- `pnpm test`: 9 test files passed, 51 tests passed
+- `pnpm build`: 4/4 packages successful
+
+### Proof scope
+
+Documentation-only update as required. No product code, workflow files, scripts, or package file changes. Ready for the strict automation sequence: implement → verify → review → fix (if needed) → approve, without manual re-triggers.
