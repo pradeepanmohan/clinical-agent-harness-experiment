@@ -280,6 +280,7 @@ jobs:
 
       - name: Wait for PR Verify to pass before review
         env:
+          GH_TOKEN: ${{ secrets.CODEX_DISPATCH_TOKEN }}
           PR_NUMBER: ${{ steps.pr.outputs.number }}
         run: |
           set -euo pipefail
@@ -300,6 +301,7 @@ jobs:
 
       - name: Trigger automatic Sandcastle review
         env:
+          GH_TOKEN: ${{ secrets.CODEX_DISPATCH_TOKEN }}
           ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
           PR_NUMBER: ${{ steps.pr.outputs.number }}
           PR_URL: ${{ steps.pr.outputs.url }}
