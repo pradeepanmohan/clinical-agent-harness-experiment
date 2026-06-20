@@ -23,6 +23,7 @@ jobs:
       group: sandcastle-issue-${{ github.event.issue.number || inputs.issue_number }}
       cancel-in-progress: false
     permissions:
+      actions: write
       contents: write
       issues: write
       pull-requests: write
@@ -204,6 +205,13 @@ jobs:
         env:
           BRANCH: ${{ steps.branch.outputs.name }}
         run: git push --force-with-lease origin "$BRANCH"
+
+      - name: Trigger Verify for Sandcastle branch
+        env:
+          BRANCH: ${{ steps.branch.outputs.name }}
+        run: |
+          set -euo pipefail
+          gh workflow run Verify --ref "$BRANCH"
 
       - name: Open or reuse draft PR
         id: pr
