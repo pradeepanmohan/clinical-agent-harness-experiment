@@ -11,10 +11,13 @@ GitHub Issue
 -> workflow pushes the Sandcastle branch
 -> workflow opens or reuses a draft PR through the REST pulls API
 -> verify.yml runs on the PR
--> add label: agent:review on the PR
+-> workflow automatically adds agent:review after Verify passes
 -> GitHub Action runs a separate Sandcastle review pass
 -> Sandcastle posts a PR review comment
--> human accepts/requests fixes/merges
+-> if verdict is COMMENT or REQUEST_CHANGES, workflow labels the issue agent:fix
+-> Sandcastle fixes the same PR branch and the loop repeats
+-> when verdict is APPROVE, automation stops
+-> human performs final review and merge
 ```
 
 The previous Codex Cloud label flow is archived under `docs/archive/`. It is not the active experiment path because Codex Cloud dispatch worked but autonomous GitHub PR publication did not.
@@ -94,9 +97,11 @@ The agent handles one issue only. It should not select its own next task unless 
 
 `verify.yml` runs independently from the agent's self-report on every PR and push to `main`.
 
-### 6. Review
+The implementation workflow waits for the PR `verify` check to pass before queueing review. If `verify` fails, the loop stops with `agent:blocked` instead of asking the reviewer to judge a known-red PR.
 
-After the implementation PR exists, add this label to the PR:
+### 6. Review and auto-fix
+
+After Verify passes, the implementation workflow automatically adds this label to the PR:
 
 ```txt
 agent:review
@@ -109,6 +114,16 @@ That runs the Sandcastle review workflow. The review agent reads the PR body, di
 - warnings,
 - what looks good,
 - verification notes.
+
+If the verdict is `COMMENT` or `REQUEST_CHANGES`, the review workflow comments on the linked issue and adds:
+
+```txt
+agent:fix
+```
+
+That dispatches another Sandcastle implementation pass on the same issue branch. The fix pass receives the linked PR context, prior Sandcastle review comments, current checks, and current PR diff, then pushes a follow-up commit. The implementation workflow waits for Verify again and queues another review.
+
+The auto-fix loop has a safety cap of 3 non-approve Sandcastle reviews. After that, the workflow labels the issue `agent:blocked` and waits for a human.
 
 ### 7. Human gate
 
