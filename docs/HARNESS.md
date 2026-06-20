@@ -82,6 +82,23 @@ A human may override the harness gate only by making an explicit follow-up commi
 - why the change is in scope for the task,
 - which verification command was rerun after the override.
 
+## Strict automation loop
+
+The harness now supports a strict full automation loop from issue label through human-ready PR with no manual re-trigger:
+
+1. Add `agent:implement` to an issue.
+2. Sandcastle commits and pushes the implementation branch.
+3. Workflow opens or reuses a draft PR.
+4. Independent `verify.yml` runs.
+5. After Verify passes, workflow adds `agent:review` to the PR.
+6. Sandcastle posts a review comment with verdict.
+7. If verdict is COMMENT or REQUEST_CHANGES, workflow adds `agent:fix` to the issue.
+8. Sandcastle fixes on the same branch and the loop repeats from step 4.
+9. After APPROVE or safety cap (3 non-approve reviews), automation stops.
+10. Human performs final review and merge.
+
+This loop requires no manual branch recovery, manual review posting, or manual re-trigger between steps.
+
 ## Failure handling
 
 If a task fails:
