@@ -9,13 +9,15 @@ Implemented the appointment scheduling vertical slice within the S03 scope.
 - Created SQL migration `0003_create_appointments.sql`.
 - Added NestJS appointment create, list, get-by-id, and update status endpoints under `/appointments`.
 - Added minimal Next.js appointment list and create form under `/appointments`.
-- Added API tests for create, list, get by id, update status, missing patient/doctor, scheduled in the past, and invalid status.
+- Added API tests for create, list, get by id, update status, missing patient/doctor fields, non-existent patient/doctor references, scheduled in the past, and invalid status.
+- After Sandcastle review, tightened runtime referential validation by sharing the existing in-memory patient and doctor services with the appointments service.
 
 No recurring appointments, calendar sync, notifications, payments, or auth behavior was added.
 
 ## Files changed
 
 - `.harness/evidence/S03-appointments.md`
+- `.harness/policies/allowed-files.json`
 - `.harness/PROGRESS.md`
 - `.harness/TASKS.json`
 - `apps/api/src/app.module.ts`
@@ -23,6 +25,9 @@ No recurring appointments, calendar sync, notifications, payments, or auth behav
 - `apps/api/src/appointments/appointments.controller.ts`
 - `apps/api/src/appointments/appointments.module.ts`
 - `apps/api/src/appointments/appointments.service.ts`
+- `apps/api/src/doctors/doctors.module.ts`
+- `apps/api/src/patients/patients.module.ts`
+- `.harness/tasks/S03-appointments.md`
 - `apps/web/src/app/appointments/page.tsx`
 - `apps/web/src/app/appointments/new/page.tsx`
 - `packages/db/src/schema.ts`
@@ -33,18 +38,21 @@ No recurring appointments, calendar sync, notifications, payments, or auth behav
 ## Commands run
 
 - `pnpm --filter @clinical/shared build`: passed, refreshing the shared package `dist` export for package-based API tests.
-- `pnpm --filter @clinical/api test`: passed with 29 API tests, including 13 new appointment tests.
+- `pnpm --filter @clinical/api test -- appointments.controller.test.ts`: passed with 15 appointment tests after the referential-validation fix.
+- `pnpm --filter @clinical/api test`: passed with 31 API tests, including 15 appointment tests.
 - `pnpm lint`: passed. Turbo reported 4 successful lint tasks.
 - `pnpm typecheck`: passed. Turbo reported 5 successful tasks, including the shared build dependency.
-- `pnpm test`: passed. Turbo reported 4 successful test tasks. Vitest reported 34 total passing tests across API, DB, shared, and web packages.
+- `pnpm test`: passed. Turbo reported 4 successful test tasks. Vitest reported 36 total passing tests across API, DB, shared, and web packages.
 - `pnpm build`: passed. Turbo reported 4 successful build tasks. Next.js built `/appointments` and `/appointments/new` successfully.
 
 ## Test results
 
-- API appointment tests: 13 passing tests covering:
+- API appointment tests: 15 passing tests covering:
   - Create appointment with valid input
   - Reject appointment missing patientId
   - Reject appointment missing doctorId
+  - Reject appointment for a non-existent patient id
+  - Reject appointment for a non-existent doctor id
   - Reject appointment scheduled in the past
   - Reject appointment missing scheduledAt
   - List appointments (empty and populated)
@@ -53,7 +61,7 @@ No recurring appointments, calendar sync, notifications, payments, or auth behav
   - Update status to checked_in, completed, cancelled
   - Reject invalid status
 - Existing patient, doctor, scaffold, DB, shared, and web tests remained passing.
-- Full final `pnpm test` result: 4 package test tasks passed, 34 tests passed, 0 failed.
+- Full final `pnpm test` result: 4 package test tasks passed, 36 tests passed, 0 failed.
 
 ## Acceptance criteria
 
@@ -83,6 +91,8 @@ The appointment schema includes:
 ### Validation
 
 - The `createAppointmentSchema` requires `patientId`, `doctorId`, and `scheduledAt`.
+- The AppointmentsModule imports PatientsModule and DoctorsModule, and the AppointmentsService checks the existing patient and doctor services before creating an appointment.
+- Missing or non-existent patient/doctor references throw `BadRequestException`.
 - The service validates that `scheduledAt` is not in the past before creating an appointment.
 - The `updateAppointmentStatusSchema` validates that status is one of the allowed enum values.
 
@@ -100,12 +110,12 @@ The appointment schema includes:
 
 ## Known limitations
 
-- The NestJS appointment service uses in-memory storage. The DB appointments table and migration exist, but the API is not yet wired to a database-backed repository.
+- The NestJS appointment service uses in-memory storage shared through the current app module graph. The DB appointments table and migration exist, but the API is not yet wired to a database-backed repository.
 - No migration runner was added or executed; S03 only adds the migration file and Drizzle schema.
 - The web create form requires manual entry of patient and doctor IDs rather than dropdowns.
 - The appointments list page shows IDs rather than patient/doctor names (would require joins or additional fetches).
 - The web create form posts to `NEXT_PUBLIC_CLINICAL_API_URL` or `http://localhost:3001` by default, so the API server must be running for interactive create/list behavior.
-- No allowed-files policy update was required for S03 (the policy already listed all necessary paths).
+- The S03 allowed-files policy was updated to include the patient/doctor module export files required for runtime referential validation.
 
 ## Next suggested task
 

@@ -1,32 +1,42 @@
 import { BadRequestException, NotFoundException } from "@nestjs/common";
 import { describe, it, expect, beforeEach } from "vitest";
 
+import { DoctorsService } from "../doctors/doctors.service.js";
+import { PatientsService } from "../patients/patients.service.js";
 import { AppointmentsController } from "./appointments.controller.js";
 import { AppointmentsService } from "./appointments.service.js";
 
+const futureDate = (): string => new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+
 describe("AppointmentsController", () => {
   let controller: AppointmentsController;
+  let doctorId: string;
+  let patientId: string;
   let service: AppointmentsService;
 
   beforeEach(() => {
-    service = new AppointmentsService();
+    const patientsService = new PatientsService();
+    const doctorsService = new DoctorsService();
+    patientId = patientsService.create({ fullName: "Asha Kumar" }).id;
+    doctorId = doctorsService.create({ fullName: "Dr. Ravi Menon", specialty: "Cardiology" }).id;
+    service = new AppointmentsService(patientsService, doctorsService);
     controller = new AppointmentsController(service);
   });
 
   describe("create", () => {
     it("creates an appointment with valid input", () => {
-      const scheduledAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      const scheduledAt = futureDate();
       const input = {
-        patientId: "patient-123",
-        doctorId: "doctor-456",
+        patientId,
+        doctorId,
         scheduledAt
       };
 
       const appointment = controller.create(input);
 
       expect(appointment.id).toBeDefined();
-      expect(appointment.patientId).toBe("patient-123");
-      expect(appointment.doctorId).toBe("doctor-456");
+      expect(appointment.patientId).toBe(patientId);
+      expect(appointment.doctorId).toBe(doctorId);
       expect(appointment.scheduledAt).toBe(scheduledAt);
       expect(appointment.status).toBe("scheduled");
       expect(appointment.createdAt).toBeDefined();
@@ -35,8 +45,8 @@ describe("AppointmentsController", () => {
 
     it("rejects appointment missing patientId", () => {
       const input = {
-        doctorId: "doctor-456",
-        scheduledAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+        doctorId,
+        scheduledAt: futureDate()
       };
 
       expect(() => controller.create(input)).toThrow(BadRequestException);
@@ -44,17 +54,37 @@ describe("AppointmentsController", () => {
 
     it("rejects appointment missing doctorId", () => {
       const input = {
-        patientId: "patient-123",
-        scheduledAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+        patientId,
+        scheduledAt: futureDate()
       };
 
       expect(() => controller.create(input)).toThrow(BadRequestException);
     });
 
+    it("rejects appointment for missing patient", () => {
+      expect(() =>
+        controller.create({
+          patientId: "missing-patient",
+          doctorId,
+          scheduledAt: futureDate()
+        })
+      ).toThrow(BadRequestException);
+    });
+
+    it("rejects appointment for missing doctor", () => {
+      expect(() =>
+        controller.create({
+          patientId,
+          doctorId: "missing-doctor",
+          scheduledAt: futureDate()
+        })
+      ).toThrow(BadRequestException);
+    });
+
     it("rejects appointment scheduled in the past", () => {
       const input = {
-        patientId: "patient-123",
-        doctorId: "doctor-456",
+        patientId,
+        doctorId,
         scheduledAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
       };
 
@@ -63,8 +93,8 @@ describe("AppointmentsController", () => {
 
     it("rejects appointment missing scheduledAt", () => {
       const input = {
-        patientId: "patient-123",
-        doctorId: "doctor-456"
+        patientId,
+        doctorId
       };
 
       expect(() => controller.create(input)).toThrow(BadRequestException);
@@ -78,15 +108,15 @@ describe("AppointmentsController", () => {
     });
 
     it("returns all appointments", () => {
-      const scheduledAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      const scheduledAt = futureDate();
       controller.create({
-        patientId: "patient-123",
-        doctorId: "doctor-456",
+        patientId,
+        doctorId,
         scheduledAt
       });
       controller.create({
-        patientId: "patient-789",
-        doctorId: "doctor-012",
+        patientId,
+        doctorId,
         scheduledAt
       });
 
@@ -97,10 +127,10 @@ describe("AppointmentsController", () => {
 
   describe("get", () => {
     it("returns appointment by id", () => {
-      const scheduledAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      const scheduledAt = futureDate();
       const created = controller.create({
-        patientId: "patient-123",
-        doctorId: "doctor-456",
+        patientId,
+        doctorId,
         scheduledAt
       });
 
@@ -115,10 +145,10 @@ describe("AppointmentsController", () => {
 
   describe("updateStatus", () => {
     it("updates appointment status to checked_in", () => {
-      const scheduledAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      const scheduledAt = futureDate();
       const created = controller.create({
-        patientId: "patient-123",
-        doctorId: "doctor-456",
+        patientId,
+        doctorId,
         scheduledAt
       });
 
@@ -127,10 +157,10 @@ describe("AppointmentsController", () => {
     });
 
     it("updates appointment status to completed", () => {
-      const scheduledAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      const scheduledAt = futureDate();
       const created = controller.create({
-        patientId: "patient-123",
-        doctorId: "doctor-456",
+        patientId,
+        doctorId,
         scheduledAt
       });
 
@@ -139,10 +169,10 @@ describe("AppointmentsController", () => {
     });
 
     it("updates appointment status to cancelled", () => {
-      const scheduledAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      const scheduledAt = futureDate();
       const created = controller.create({
-        patientId: "patient-123",
-        doctorId: "doctor-456",
+        patientId,
+        doctorId,
         scheduledAt
       });
 
@@ -151,10 +181,10 @@ describe("AppointmentsController", () => {
     });
 
     it("rejects invalid status", () => {
-      const scheduledAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      const scheduledAt = futureDate();
       const created = controller.create({
-        patientId: "patient-123",
-        doctorId: "doctor-456",
+        patientId,
+        doctorId,
         scheduledAt
       });
 
