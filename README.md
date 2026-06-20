@@ -10,6 +10,7 @@ The application is intentionally small. The real product is the harness:
 - allowed-file policies
 - verification commands
 - evidence artifacts
+- PR walkthrough artifacts
 - GitHub Actions execution
 - separate review pass
 - human merge gate

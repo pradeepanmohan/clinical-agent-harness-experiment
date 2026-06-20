@@ -1,48 +1,49 @@
-# Workflow: Agent Harness Modes
+# Workflow: Sandcastle Agent Harness
 
-This repository compares two Matt Pocock-inspired agent harness patterns.
-
-## Mode A: Codex Cloud label flow
+This repository now uses one primary Matt Pocock-inspired harness pattern:
 
 ```txt
 GitHub Issue
 -> add label: agent:implement
--> GitHub Action posts a human-authored @codex instruction comment
--> Codex Subscription / Codex Cloud executes from GitHub context
--> human reviews Codex task UI and clicks Create PR when needed
--> verify.yml runs on the PR
--> optional PR label: agent:review
--> GitHub Action posts @codex review
--> human reviews and merges
-```
-
-GitHub Actions dispatch comments and run verification. They do not run Codex with `OPENAI_API_KEY` in this mode.
-
-### Validated lesson
-
-The dispatch gate works when the `@codex` comment is authored with `CODEX_DISPATCH_TOKEN` instead of `github-actions[bot]`. However, Codex Cloud PR publication is not fully autonomous in this repo: Codex can prepare a branch/PR candidate inside its UI, but a human may need to click **Create PR**.
-
-Use this mode when the desired gate is:
-
-```txt
-human label -> Codex Cloud implementation -> human PR publication -> GitHub verify -> human merge
-```
-
-## Mode B: Sandcastle runner flow
-
-```txt
-GitHub Issue
--> add label: agent:sandcastle
 -> GitHub Action runs Sandcastle
 -> Sandcastle creates an isolated Docker worktree branch
 -> Claude Code implements exactly one issue
 -> workflow pushes the Sandcastle branch
--> workflow opens a draft PR
+-> workflow opens or reuses a draft PR through the REST pulls API
 -> verify.yml runs on the PR
--> human reviews and merges
+-> add label: agent:review on the PR
+-> GitHub Action runs a separate Sandcastle review pass
+-> Sandcastle posts a PR review comment
+-> human accepts/requests fixes/merges
 ```
 
-This mode follows Matt Pocock's AFK-agent-loop direction more closely because the runner owns git directly. The agent does not rely on Codex Cloud's UI publication gate.
+The previous Codex Cloud label flow is archived under `docs/archive/`. It is not the active experiment path because Codex Cloud dispatch worked but autonomous GitHub PR publication did not.
+
+## Why Sandcastle is the active path
+
+Sandcastle mode follows the desired AFK-agent-loop pattern more closely because the runner owns git directly:
+
+- issue labels are the task queue,
+- the runner creates an isolated worktree,
+- the agent works from fresh repository state and issue context,
+- the workflow pushes a branch,
+- the workflow opens a draft PR,
+- GitHub Actions verifies the PR independently,
+- review is a separate pass,
+- a human owns merge.
+
+## Validated lesson
+
+The Sandcastle runner flow has been validated end to end. Issue #17 triggered successful workflow run `27839376514`; the runner created branch `sandcastle/issue-17-sandcastle-token-updated-pr-publication-smoke-test`, opened draft PR #18, and the PR's independent `verify` check passed.
+
+Key operational lessons:
+
+- the Docker image must stay alive for Sandcastle `docker exec`,
+- `/home/agent/.claude` must be writable for Claude Code session capture,
+- package-manager and git home variables must be forced in the container setup,
+- PR publication should use the REST pulls API, not `gh pr create`,
+- PR publication should be idempotent and reuse an open PR for the same branch,
+- the fine-grained PAT must include `Contents: read/write`, `Issues: read/write`, `Pull requests: read/write`, and `Metadata: read`.
 
 See `docs/SANDCASTLE.md` for setup and operation.
 
@@ -69,16 +70,25 @@ Write the task file with:
 - evidence requirements
 - out of scope list
 
-### 3. Dispatch
+### 3. Dispatch implementation
 
-Create or update a GitHub issue for one task, then choose a mode:
+Create or update a GitHub issue for one task, then add:
 
-- `agent:implement` for Codex Cloud mode.
-- `agent:sandcastle` for Sandcastle runner mode.
+```txt
+agent:implement
+```
+
+For follow-up fixes, add:
+
+```txt
+agent:fix
+```
+
+Both labels dispatch the Sandcastle implementation workflow. `agent:sandcastle` remains a backward-compatible alias but should not be used for new issues.
 
 ### 4. Execute
 
-The agent handles one task only. It should not select its own next task unless the harness asks it to.
+The agent handles one issue only. It should not select its own next task unless the harness asks it to.
 
 ### 5. Verify
 
@@ -86,35 +96,56 @@ The agent handles one task only. It should not select its own next task unless t
 
 ### 6. Review
 
-A separate review pass checks the diff against the task contract. Use `agent:review` for Codex Cloud review or run human review manually for Sandcastle draft PRs.
+After the implementation PR exists, add this label to the PR:
 
-### 7. Repeat
+```txt
+agent:review
+```
 
-The next run starts from repository state, not the prior chat.
+That runs the Sandcastle review workflow. The review agent reads the PR body, diff, files, checks, comments, and reviews, then posts a structured review comment with:
+
+- verdict,
+- blockers,
+- warnings,
+- what looks good,
+- verification notes.
+
+### 7. Human gate
+
+A human decides whether to:
+
+- request fixes,
+- mark the PR ready for review,
+- merge,
+- close/reject,
+- mark `agent:done`.
 
 ## Labels
 
 Required labels:
 
-- `agent:implement` — dispatch implementation from a GitHub issue through Codex Cloud.
-- `agent:sandcastle` — dispatch implementation from a GitHub issue through the Sandcastle runner.
-- `agent:review` — dispatch review from a pull request.
-- `agent:fix` — mark a follow-up fix request after human/Codex review.
+- `agent:implement` — dispatch issue implementation through Sandcastle.
+- `agent:fix` — dispatch follow-up implementation/fix through Sandcastle.
+- `agent:review` — dispatch PR review through Sandcastle.
 
-Optional labels:
+Operational labels:
 
-- `agent:blocked`
-- `agent:done`
-- `harness:s02`
+- `agent:blocked` — workflow failed or needs intervention.
+- `agent:done` — human accepted/merged/completed the task.
+- `agent:sandcastle` — backward-compatible implementation alias; prefer `agent:implement`.
+
+Scope labels:
+
+- `harness:s02`, `harness:s03`, etc.
 - `scope:clinical-app`
 
 ## Why this matters
 
-Long chats rot. Durable files do not. The workflow should make progress inspectable through git, tests, evidence, and PRs rather than through a giant conversation transcript.
+Long chats rot. Durable files do not. The workflow should make progress inspectable through git, tests, evidence, PRs, and review comments rather than through a giant conversation transcript.
 
-The comparison is:
+The active comparison is now simple:
 
 ```txt
-Codex Cloud mode: labels trigger Codex, human publishes PR, GitHub Actions verifies.
-Sandcastle mode: labels trigger an Actions-hosted agent runner, runner publishes draft PR, GitHub Actions verifies.
+Archived Codex Cloud mode: label dispatch worked, PR publication failed.
+Active Sandcastle mode: labels trigger an Actions-hosted agent runner, runner publishes draft PR, GitHub Actions verifies, Sandcastle reviews, human merges.
 ```

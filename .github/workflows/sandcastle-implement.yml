@@ -14,6 +14,8 @@ jobs:
   implement:
     if: >-
       github.event_name == 'workflow_dispatch' ||
+      github.event.label.name == 'agent:implement' ||
+      github.event.label.name == 'agent:fix' ||
       github.event.label.name == 'agent:sandcastle'
     runs-on: ubuntu-latest
     timeout-minutes: 90
@@ -55,7 +57,7 @@ jobs:
         run: |
           set -euo pipefail
           if [ -z "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
-            gh issue comment "$ISSUE_NUMBER" --body "Sandcastle refused to run: missing repository secret \`CLAUDE_CODE_OAUTH_TOKEN\`. Add the secret, then re-run this workflow or re-add \`agent:sandcastle\`."
+            gh issue comment "$ISSUE_NUMBER" --body "Sandcastle refused to run: missing repository secret \`CLAUDE_CODE_OAUTH_TOKEN\`. Add the secret, then re-run this workflow or re-add \`agent:implement\`."
             gh issue edit "$ISSUE_NUMBER" --add-label "agent:blocked" || true
             exit 1
           fi
@@ -195,6 +197,8 @@ jobs:
         env:
           ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
         run: |
+          gh issue edit "$ISSUE_NUMBER" --remove-label "agent:implement" || true
+          gh issue edit "$ISSUE_NUMBER" --remove-label "agent:fix" || true
           gh issue edit "$ISSUE_NUMBER" --remove-label "agent:sandcastle" || true
           gh issue edit "$ISSUE_NUMBER" --remove-label "agent:blocked" || true
 
@@ -205,4 +209,4 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           gh issue edit "$ISSUE_NUMBER" --add-label "agent:blocked" || true
-          gh issue comment "$ISSUE_NUMBER" --body "Sandcastle run failed. Workflow run: $RUN_URL. Re-run the workflow or re-add \`agent:sandcastle\` after fixing the blocker." || true
+          gh issue comment "$ISSUE_NUMBER" --body "Sandcastle run failed. Workflow run: $RUN_URL. Re-run the workflow or re-add \`agent:implement\` after fixing the blocker." || true

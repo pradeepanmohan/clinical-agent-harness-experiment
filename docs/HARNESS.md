@@ -80,3 +80,25 @@ Agents own:
 - local verification
 - evidence generation
 - honest handoff
+
+## PR walkthrough artifacts
+
+Every PR can have a generated reviewer-orientation artifact. This copies the useful part of Warp's `/pr-walkthrough` pattern without requiring a Warp/Oz API key:
+
+```bash
+pnpm pr-walkthrough -- --pr <number> --repo <owner>/<repo> --out .harness/pr-walkthrough/index.html
+```
+
+The generated artifact is a static HTML/D3 site with four reviewer views:
+
+1. **System overview** — stable repository areas touched by the PR.
+2. **Data flow graph** — how PR intent and changed files flow into reviewer understanding.
+3. **Code dependency graph** — entrypoints, touched areas, and verification surface.
+4. **User action graph** — the human reviewer path through the PR.
+
+GitHub Actions integration is intentionally split:
+
+- `.github/workflows/pr-walkthrough.yml` runs with read-only repository permissions, generates `.harness/pr-walkthrough/index.html`, validates the artifact shape, and uploads it as an Actions artifact.
+- `.github/workflows/pr-walkthrough-publish.yml` is manual-only and has write permissions. It can comment with the artifact run. Publishing to `gh-pages` is opt-in via `publish_to_pages=true` because private/client PR context may be sensitive.
+
+This is an orientation aid, not a review verdict. Human review and merge approval remain separate gates.

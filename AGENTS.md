@@ -18,28 +18,32 @@ Build the smallest correct slice described by the active `.harness/tasks/*.md` f
 8. Do not add auth, billing, insurance, or complex RBAC unless a task explicitly asks for it.
 9. Keep diffs small enough for human review.
 
-## Agent harness modes
+## Active harness mode
 
-This repository currently compares two agent execution models.
+This repository uses the **Sandcastle runner** as the primary harness path.
 
-### Codex Cloud label flow
+The earlier Codex Cloud label method is archived because dispatch worked, but PR publication was unreliable: Codex could react/run and claim a branch or PR, while GitHub had no branch, commit, or PR. Keep those notes as historical evidence only.
 
-The GitHub-connected Codex Subscription / Codex Cloud flow is triggered by `agent:implement` and `agent:review`.
+## Label state machine
 
-- `agent:implement` on an issue asks `@codex` to implement that issue.
-- `agent:review` on a pull request asks `@codex review` to review that PR.
-- GitHub Actions may dispatch comments and verify PRs, but must not execute Codex with `OPENAI_API_KEY` as the primary harness path.
-- Codex should work from the GitHub issue/PR context, follow this file, write evidence, and leave merge/acceptance to the human gate.
-- Current experiment result: Codex Cloud can execute tasks, but PR publication may require the Codex UI **Create PR** gate.
+Use the original labels, now mapped to Sandcastle:
 
-### Sandcastle runner flow
+- `agent:implement` on an issue runs the Sandcastle implementation workflow.
+- `agent:fix` on an issue reruns the Sandcastle implementation workflow for follow-up fixes.
+- `agent:review` on a pull request runs the Sandcastle review workflow and posts a review comment.
+- `agent:blocked` marks failed or blocked automation.
+- `agent:done` marks human-accepted completion.
 
-The Actions-hosted Sandcastle runner is triggered by `agent:sandcastle`.
+`agent:sandcastle` remains as a backward-compatible alias, but new issues should use `agent:implement`.
 
-- The workflow runs Sandcastle in a Docker worktree.
+## Sandcastle runner flow
+
+- The implementation workflow runs Sandcastle in a Docker worktree.
 - The agent must implement exactly one issue and commit to the Sandcastle branch.
-- The workflow pushes the branch and opens a draft PR.
+- The workflow pushes the branch and opens or reuses a draft PR through the GitHub REST pulls API.
 - The draft PR remains a human review/acceptance/merge gate.
+- The review workflow runs a separate Sandcastle review pass against the PR diff and posts its findings as a PR comment.
+- Current experiment result: Sandcastle is validated end to end when `CLAUDE_CODE_OAUTH_TOKEN` and a `CODEX_DISPATCH_TOKEN` with Contents, Issues, Pull Requests, and Metadata permissions are configured.
 
 ## Quality bar
 
@@ -52,4 +56,4 @@ The Actions-hosted Sandcastle runner is triggered by `agent:sandcastle`.
 
 ## Human gate
 
-Codex can implement, test, and open/update a PR. A human owns product acceptance, architecture approval, merge, and release.
+The Sandcastle runner can implement, test, open/update a draft PR, and review a PR. A human owns product acceptance, architecture approval, merge, and release.

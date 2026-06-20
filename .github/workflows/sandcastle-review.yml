@@ -1,0 +1,141 @@
+name: Sandcastle Review
+
+on:
+  pull_request:
+    types: [labeled]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "GitHub pull request number to review"
+        required: true
+        type: string
+
+jobs:
+  review:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.label.name == 'agent:review'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    concurrency:
+      group: sandcastle-review-${{ github.event.pull_request.number || inputs.pr_number }}
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+      SANDCASTLE_IMAGE_NAME: sandcastle:clinical-agent-harness
+      SANDCASTLE_AGENT_MODEL: claude-sonnet-4-5
+
+    steps:
+      - name: Resolve PR number
+        id: pr
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            pr_number='${{ inputs.pr_number }}'
+          else
+            pr_number='${{ github.event.pull_request.number }}'
+          fi
+          if ! [[ "$pr_number" =~ ^[0-9]+$ ]]; then
+            echo "Invalid PR number: $pr_number" >&2
+            exit 1
+          fi
+          echo "number=$pr_number" >> "$GITHUB_OUTPUT"
+
+      - name: Preflight Claude Code token
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+        run: |
+          set -euo pipefail
+          if [ -z "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
+            gh pr comment "$PR_NUMBER" --body "Sandcastle review refused to run: missing repository secret \`CLAUDE_CODE_OAUTH_TOKEN\`. Add the secret, then re-run this workflow or re-add \`agent:review\`."
+            exit 1
+          fi
+
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          ref: refs/pull/${{ steps.pr.outputs.number }}/head
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.1.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Sandcastle image
+        run: |
+          docker build \
+            --build-arg AGENT_UID=$(id -u) \
+            --build-arg AGENT_GID=$(id -g) \
+            -t "$SANDCASTLE_IMAGE_NAME" \
+            -f .sandcastle/Dockerfile \
+            .
+
+      - name: Prepare PR review context
+        env:
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+        run: |
+          set -euo pipefail
+          mkdir -p .sandcastle/runtime
+          gh pr view "$PR_NUMBER" --json number,title,body,baseRefName,headRefName,author,labels,commits,files,comments,reviews,statusCheckRollup > .sandcastle/runtime/pr.json
+          gh pr diff "$PR_NUMBER" --patch > .sandcastle/runtime/pr.diff
+          node <<'NODE'
+          const fs = require('node:fs');
+          const pr = JSON.parse(fs.readFileSync('.sandcastle/runtime/pr.json', 'utf8'));
+          const diff = fs.readFileSync('.sandcastle/runtime/pr.diff', 'utf8');
+          const labels = pr.labels.map((label) => label.name).join(', ');
+          const files = pr.files.map((file) => `- ${file.path} (+${file.additions}/-${file.deletions})`).join('\n');
+          const checks = pr.statusCheckRollup.map((check) => `- ${check.workflowName || check.name}: ${check.status || ''} ${check.conclusion || ''}`).join('\n');
+          const comments = pr.comments.map((comment, index) => `## Comment ${index + 1} by ${comment.author.login}\n\n${comment.body}`).join('\n\n');
+          const reviews = pr.reviews.map((review, index) => `## Review ${index + 1} by ${review.author.login}\n\nState: ${review.state}\n\n${review.body || ''}`).join('\n\n');
+          const markdown = `# Pull Request #${pr.number}: ${pr.title}\n\nAuthor: ${pr.author.login}\nBase: ${pr.baseRefName}\nHead: ${pr.headRefName}\nLabels: ${labels}\n\n## Body\n\n${pr.body || '(no body)'}\n\n## Files\n\n${files || '(none)'}\n\n## Checks\n\n${checks || '(none)'}\n\n# Comments\n\n${comments || '(none)'}\n\n# Prior Reviews\n\n${reviews || '(none)'}\n\n# Diff\n\n\`\`\`diff\n${diff}\n\`\`\`\n`;
+          fs.writeFileSync('.sandcastle/runtime/pr-review-context.md', markdown);
+          NODE
+
+      - name: Run Sandcastle review agent
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          PR_CONTEXT_FILE: .sandcastle/runtime/pr-review-context.md
+          SANDCASTLE_REVIEW_FILE: .sandcastle/runtime/sandcastle-review.md
+          SANDCASTLE_RESULT_FILE: .sandcastle/runtime/sandcastle-review-result.json
+        run: pnpm sandcastle:review
+
+      - name: Post Sandcastle review comment
+        env:
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+        run: |
+          set -euo pipefail
+          test -s .sandcastle/runtime/sandcastle-review.md
+          gh pr comment "$PR_NUMBER" --body-file .sandcastle/runtime/sandcastle-review.md
+
+      - name: Cleanup label after success
+        if: success() && github.event_name == 'pull_request'
+        env:
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+        run: |
+          gh pr edit "$PR_NUMBER" --remove-label "agent:review" || true
+
+      - name: Comment on failure
+        if: failure()
+        env:
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh pr comment "$PR_NUMBER" --body "Sandcastle review failed. Workflow run: $RUN_URL. Re-run the workflow or re-add \`agent:review\` after fixing the blocker." || true
