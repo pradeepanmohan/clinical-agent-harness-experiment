@@ -82,6 +82,10 @@ A human may override the harness gate only by making an explicit follow-up commi
 - why the change is in scope for the task,
 - which verification command was rerun after the override.
 
+## Full-flow proof validation
+
+Issue #33 validates the complete no-manual-intervention Sandcastle flow after the S06 harness checks merged in PR #30. The proof issue reuses the S06 task id and allowed-files policy, makes minimal documentation updates, and demonstrates that the harness gates operate correctly for an autonomous implement → verify → review → fix loop.
+
 ## Failure handling
 
 If a task fails:

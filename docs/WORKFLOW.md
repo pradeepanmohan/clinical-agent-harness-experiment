@@ -48,6 +48,10 @@ Key operational lessons:
 - PR publication should be idempotent and reuse an open PR for the same branch,
 - the fine-grained PAT must include `Contents: read/write`, `Issues: read/write`, `Pull requests: read/write`, and `Metadata: read`.
 
+## Full no-intervention flow proof
+
+Issue #33 validates the complete Sandcastle loop after PR #30 merged the S06 harness hardening changes. This proof issue intentionally reuses the S06 task id and allowed-files policy to ensure the harness checks pass without manual intervention. The expected flow is: issue labeled `agent:implement` → Sandcastle implements → harness checks pass → branch pushed → draft PR opened → PR Verify passes → `agent:review` queued → Sandcastle Review posts verdict → if needed, `agent:fix` loop runs → human final review and merge.
+
 See `docs/SANDCASTLE.md` for setup and operation.
 
 ## Matt-inspired steps

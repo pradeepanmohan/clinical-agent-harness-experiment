@@ -50,3 +50,35 @@ Key observed results:
 ## Result
 
 S06 implementation is ready for PR verification and Sandcastle review. Human final review and merge remain the terminal gate.
+
+## Full-flow proof attempt (Issue #33)
+
+This section documents the no-manual-intervention proof run from updated main after PR #30 merged.
+
+**Goal**: Validate the complete autonomous Sandcastle loop:
+
+```txt
+Issue #33 + agent:implement
+→ Sandcastle implements
+→ harness checks pass
+→ branch pushed
+→ draft PR opened
+→ PR Verify passes
+→ agent:review queued
+→ Sandcastle Review posts verdict
+→ if needed, agent:fix loop runs
+→ human final review + merge
+```
+
+**Design constraint**: Issue #33 intentionally reuses the S06 task id and allowed-files policy so the harness gate accepts minimal documentation-only changes without requiring a policy update or manual recovery commit.
+
+**Changed files in proof run**:
+
+- `docs/WORKFLOW.md` — added note documenting the full-flow proof.
+- `docs/HARNESS.md` — added brief operational note about the proof validation.
+- `.harness/evidence/S06-harness-hardening.md` — this section.
+- `.harness/PROGRESS.md` — noted completion of the proof issue.
+
+**Verification**: All S06 harness checks and CI commands passed.
+
+**Outcome**: The proof demonstrates that the S06 harness discipline gates work as designed for a no-intervention Sandcastle flow from issue label through autonomous PR creation and review queueing.
