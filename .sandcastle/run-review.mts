@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { claudeCode, run } from "@ai-hero/sandcastle";
+import { claudeCode, Output, run } from "@ai-hero/sandcastle";
 import { docker } from "@ai-hero/sandcastle/sandboxes/docker";
 
 const required = (name: string): string => {
@@ -72,7 +72,28 @@ Write the review to ${reviewFile} in this exact shape:
 
 Do not edit repository files except writing ${reviewFile}.
 Do not commit.
-Output <promise>COMPLETE</promise> when the review file is written.
+After writing ${reviewFile}, print the exact same review markdown between these tags so the host runner can recover it even when sandbox files are not copied back:
+
+<sandcastle_review>
+<!-- sandcastle-review -->
+## Sandcastle Review
+
+**Verdict:** APPROVE | COMMENT | REQUEST_CHANGES
+
+### Blockers
+- ...
+
+### Warnings
+- ...
+
+### What looks good
+- ...
+
+### Verification notes
+- ...
+</sandcastle_review>
+
+Then output <promise>COMPLETE</promise>.
 
 ## PR context
 
@@ -135,7 +156,8 @@ const result = await run({
     },
   },
   prompt,
-  maxIterations: Number(process.env.SANDCASTLE_REVIEW_MAX_ITERATIONS ?? "2"),
+  output: Output.string({ tag: "sandcastle_review" }),
+  maxIterations: 1,
   idleTimeoutSeconds: Number(process.env.SANDCASTLE_IDLE_TIMEOUT_SECONDS ?? "600"),
   completionTimeoutSeconds: Number(process.env.SANDCASTLE_COMPLETION_TIMEOUT_SECONDS ?? "60"),
   logging: { type: "stdout", verbose: true },
@@ -154,18 +176,21 @@ const payload = {
 writeFileSync(resolve(repoRoot, outputFile), JSON.stringify(payload, null, 2));
 console.log(JSON.stringify(payload, null, 2));
 
+const recoveredReview = result.output;
 const reviewSourceFile = existsSync(absoluteReviewFile)
   ? absoluteReviewFile
   : result.preservedWorktreePath
     ? resolve(result.preservedWorktreePath, reviewFile)
-    : absoluteReviewFile;
+    : undefined;
 
-const review = readFileSync(reviewSourceFile, "utf8");
+const review = reviewSourceFile && existsSync(reviewSourceFile)
+  ? readFileSync(reviewSourceFile, "utf8")
+  : recoveredReview;
 if (!review.includes("<!-- sandcastle-review -->") || !review.includes("**Verdict:**")) {
-  throw new Error(`Review file ${reviewFile} is missing the required Sandcastle review marker or verdict.`);
+  throw new Error(`Review output is missing the required Sandcastle review marker or verdict.`);
 }
 
-if (reviewSourceFile !== absoluteReviewFile) {
+if (!reviewSourceFile || reviewSourceFile !== absoluteReviewFile) {
   mkdirSync(dirname(absoluteReviewFile), { recursive: true });
   writeFileSync(absoluteReviewFile, review);
 }
