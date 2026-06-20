@@ -57,3 +57,15 @@ export const appointments = pgTable("appointments", {
     .defaultNow()
     .notNull()
 });
+
+export const clinicalNotes = pgTable("clinical_notes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  appointmentId: uuid("appointment_id").notNull().references(() => appointments.id),
+  noteText: varchar("note_text", { length: 10000 }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull()
+});

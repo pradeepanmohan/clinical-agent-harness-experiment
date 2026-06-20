@@ -64,9 +64,19 @@ The repository now has a minimal pnpm/Turbo monorepo with Next.js, NestJS, share
 - Added clear empty state for when no appointments are scheduled today.
 - Ran S04 verification commands and wrote `.harness/evidence/S04-today-dashboard.md`.
 
+## Completed S05
+
+- Added shared clinical note validation and DTO types.
+- Added Drizzle `clinical_notes` table schema with foreign key to appointments.
+- Added NestJS `ClinicalNotesModule`, controller, and in-memory service for create, list by appointment, and get by id.
+- Added appointment detail page showing notes and new note creation form in the Next.js app.
+- Added API tests covering create, required noteText, missing appointment, and filtering by appointment.
+- Notes are only shown on appointment detail pages, not in broad list views.
+- Ran S05 verification commands and wrote `.harness/evidence/S05-clinical-notes.md`.
+
 ## Next task
 
-S05: Implement clinical notes.
+S06 or next task from `.harness/TASKS.json`.
 
 ## Handoff note
 
@@ -79,9 +89,9 @@ A future Codex run should start by reading:
 - `docs/WORKFLOW.md`
 - `.harness/TASKS.json`
 - `.harness/PROGRESS.md`
-- `.harness/tasks/S05-clinical-notes.md`
-- `.harness/evidence/S04-today-dashboard.md`
+- Next task file from `.harness/tasks/`
+- `.harness/evidence/S05-clinical-notes.md`
 
-S04 verification passed locally. The S01, S02, S03, and S04 API services store records in memory; DB schema and migrations exist, but runtime database-backed repositories remain future work.
+S05 verification passed locally. The S01, S02, S03, S04, and S05 API services store records in memory; DB schema and migrations exist, but runtime database-backed repositories remain future work.
 
 The Sandcastle label harness has been validated end-to-end through the SMOKE test. The workflow can now handle `agent:implement` labeled issues and will support `agent:review` labeled PRs.
