@@ -57,6 +57,13 @@
       "status": "pending",
       "priority": 8,
       "taskFile": ".harness/tasks/S06-harness-hardening.md"
+    },
+    {
+      "id": "42",
+      "title": "Strict automation proof after dispatch-token fix",
+      "status": "in_progress",
+      "priority": 9,
+      "taskFile": ".harness/tasks/strict-automation-proof.md"
     }
   ]
 }
