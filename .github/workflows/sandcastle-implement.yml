@@ -249,33 +249,24 @@ jobs:
           echo "number=$pr_number" >> "$GITHUB_OUTPUT"
           gh issue comment "$ISSUE_NUMBER" --body "Sandcastle opened or updated draft PR: $pr_url"
 
-      - name: Wait for current-head Verify to pass before review
+      - name: Wait for PR Verify to pass before review
         env:
           PR_NUMBER: ${{ steps.pr.outputs.number }}
         run: |
           set -euo pipefail
-          head_sha=$(gh pr view "$PR_NUMBER" --json headRefOid --jq .headRefOid)
-          echo "Waiting for Verify on PR #${PR_NUMBER} head ${head_sha}"
           for attempt in $(seq 1 60); do
-            run_json=$(gh run list --workflow Verify --json databaseId,headSha,status,conclusion,url --limit 30 \
-              --jq ".[] | select(.headSha == \"${head_sha}\")" | head -n 1 || true)
-            if [ -n "$run_json" ]; then
-              echo "$run_json"
-              status=$(node -e "const data=JSON.parse(process.argv[1]); console.log(data.status ?? '')" "$run_json")
-              conclusion=$(node -e "const data=JSON.parse(process.argv[1]); console.log(data.conclusion ?? '')" "$run_json")
-              if [ "$status" = "completed" ] && [ "$conclusion" = "success" ]; then
-                exit 0
-              fi
-              if [ "$status" = "completed" ] && [ "$conclusion" != "success" ]; then
-                echo "PR Verify failed for ${head_sha}; not triggering review." >&2
-                exit 1
-              fi
-            else
-              echo "No Verify run found yet for ${head_sha}."
+            checks=$(gh pr checks "$PR_NUMBER" || true)
+            echo "$checks"
+            if echo "$checks" | grep -Eq '^verify[[:space:]]+pass'; then
+              exit 0
+            fi
+            if echo "$checks" | grep -Eq '^verify[[:space:]]+fail'; then
+              echo "PR Verify failed; not triggering review." >&2
+              exit 1
             fi
             sleep 10
           done
-          echo "Timed out waiting for current-head PR Verify to pass; not triggering review." >&2
+          echo "Timed out waiting for PR Verify to pass; not triggering review." >&2
           exit 1
 
       - name: Trigger automatic Sandcastle review
