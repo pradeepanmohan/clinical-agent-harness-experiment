@@ -58,10 +58,10 @@ jobs:
             exit 1
           fi
 
-      - name: Checkout PR head
+      - name: Checkout harness runner
         uses: actions/checkout@v4
         with:
-          ref: refs/pull/${{ steps.pr.outputs.number }}/head
+          ref: main
           fetch-depth: 0
 
       - name: Setup pnpm
