@@ -26,7 +26,7 @@
     {
       "id": "SMOKE-SANDCASTLE-LABEL-E2E",
       "title": "Prove Sandcastle label harness end-to-end",
-      "status": "pending",
+      "status": "completed",
       "priority": 4,
       "taskFile": ".harness/tasks/SMOKE-sandcastle-label-e2e.md"
     },
