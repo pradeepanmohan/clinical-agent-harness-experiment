@@ -24,31 +24,38 @@
       "taskFile": ".harness/tasks/S02-doctor-crud.md"
     },
     {
+      "id": "SMOKE-SANDCASTLE-LABEL-E2E",
+      "title": "Prove Sandcastle label harness end-to-end",
+      "status": "pending",
+      "priority": 4,
+      "taskFile": ".harness/tasks/SMOKE-sandcastle-label-e2e.md"
+    },
+    {
       "id": "S03",
       "title": "Implement appointment scheduling",
       "status": "pending",
-      "priority": 4,
+      "priority": 5,
       "taskFile": ".harness/tasks/S03-appointments.md"
     },
     {
       "id": "S04",
       "title": "Implement today's appointments dashboard",
       "status": "pending",
-      "priority": 5,
+      "priority": 6,
       "taskFile": ".harness/tasks/S04-today-dashboard.md"
     },
     {
       "id": "S05",
       "title": "Implement clinical notes",
       "status": "pending",
-      "priority": 6,
+      "priority": 7,
       "taskFile": ".harness/tasks/S05-clinical-notes.md"
     },
     {
       "id": "S06",
       "title": "Harden harness checks and review loop",
       "status": "pending",
-      "priority": 7,
+      "priority": 8,
       "taskFile": ".harness/tasks/S06-harness-hardening.md"
     }
   ]
