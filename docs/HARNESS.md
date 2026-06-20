@@ -22,12 +22,16 @@ Codex should not rely on previous chat history. Each run receives fresh context 
 ```txt
 Pick one pending task
 -> build fresh context
--> run Codex
+-> run implementation agent
 -> verify with real commands
 -> write evidence
 -> update progress
 -> open or update PR
--> wait for human review
+-> wait for PR Verify
+-> run review agent
+-> if review finds issues, run fix agent on the same PR branch
+-> repeat verify/review/fix until review approves or safety cap trips
+-> wait for human final review and merge
 ```
 
 ## Fresh context inputs
@@ -77,6 +81,7 @@ Humans own:
 Agents own:
 
 - bounded implementation
+- review-driven fix iterations
 - local verification
 - evidence generation
 - honest handoff

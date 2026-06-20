@@ -22,6 +22,7 @@ const imageName = process.env.SANDCASTLE_IMAGE_NAME ?? "sandcastle:clinical-agen
 const model = process.env.SANDCASTLE_AGENT_MODEL ?? "claude-sonnet-4-5";
 const baseBranch = process.env.SANDCASTLE_BASE_BRANCH ?? "origin/main";
 const dryRun = process.env.SANDCASTLE_DRY_RUN === "1";
+const runMode = process.env.SANDCASTLE_RUN_MODE ?? "implement";
 const claudeToken = process.env.CLAUDE_CODE_OAUTH_TOKEN;
 
 const issueContext = readFileSync(resolve(repoRoot, issueContextFile), "utf8");
@@ -29,6 +30,8 @@ const issueContext = readFileSync(resolve(repoRoot, issueContextFile), "utf8");
 const prompt = `# Sandcastle clinical harness task
 
 You are running inside a Sandcastle Docker worktree on branch ${branch}.
+
+Run mode: ${runMode}.
 
 Implement exactly one GitHub issue from the context below.
 
@@ -39,9 +42,10 @@ Implement exactly one GitHub issue from the context below.
 3. Prefer TDD for new behavior.
 4. Run the verification commands named by the task.
 5. Write or update the required evidence file under .harness/evidence/.
-6. Make one or more git commits on branch ${branch}.
-7. Do not merge the PR or push directly to main.
-8. Do not close the issue; the GitHub workflow will create a draft PR.
+6. If run mode is fix, address the latest Sandcastle review findings in the linked PR context. Do not redo unrelated work.
+7. Make one or more git commits on branch ${branch}.
+8. Do not merge the PR or push directly to main.
+9. Do not close the issue; the GitHub workflow will create or update a draft PR.
 
 ## Required final behavior
 
@@ -63,6 +67,7 @@ if (dryRun) {
     repoRoot,
     issueNumber,
     issueTitle,
+    runMode,
     branch,
     baseBranch,
     imageName,
@@ -121,6 +126,7 @@ const payload = {
   dryRun: false,
   issueNumber,
   issueTitle,
+  runMode,
   branch: result.branch,
   commits: result.commits,
   completionSignal: result.completionSignal,

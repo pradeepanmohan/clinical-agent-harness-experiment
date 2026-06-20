@@ -91,37 +91,88 @@ jobs:
             -f .sandcastle/Dockerfile \
             .
 
-      - name: Prepare issue context
-        id: context
-        env:
-          ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
-        run: |
-          set -euo pipefail
-          mkdir -p .sandcastle/runtime
-          gh issue view "$ISSUE_NUMBER" --comments --json number,title,body,labels,comments > .sandcastle/runtime/issue.json
-          node <<'NODE'
-          const fs = require('node:fs');
-          const issue = JSON.parse(fs.readFileSync('.sandcastle/runtime/issue.json', 'utf8'));
-          const labels = issue.labels.map((label) => label.name).join(', ');
-          const comments = issue.comments
-            .map((comment, index) => `## Comment ${index + 1} by ${comment.author.login}\n\n${comment.body}`)
-            .join('\n\n');
-          const markdown = `# Issue #${issue.number}: ${issue.title}\n\nLabels: ${labels}\n\n## Body\n\n${issue.body || '(no body)'}\n\n${comments ? `# Comments\n\n${comments}` : ''}\n`;
-          fs.writeFileSync('.sandcastle/runtime/issue-context.md', markdown);
-          fs.appendFileSync(process.env.GITHUB_OUTPUT, `title=${issue.title.replace(/%/g, '%25').replace(/\n/g, '%0A').replace(/\r/g, '%0D')}\n`);
-          NODE
-
       - name: Compute branch name
         id: branch
         env:
           ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
-          ISSUE_TITLE: ${{ steps.context.outputs.title }}
         run: |
           set -euo pipefail
-          slug=$(printf '%s' "$ISSUE_TITLE" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+|-+$//g' | cut -c1-50)
+          title=$(gh issue view "$ISSUE_NUMBER" --json title --jq .title)
+          slug=$(printf '%s' "$title" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+|-+$//g' | cut -c1-50)
           if [ -z "$slug" ]; then slug="task"; fi
           branch="sandcastle/issue-${ISSUE_NUMBER}-${slug}"
           echo "name=$branch" >> "$GITHUB_OUTPUT"
+          echo "title=${title//%/%25}" | sed ':a;N;$!ba;s/\n/%0A/g;s/\r/%0D/g' >> "$GITHUB_OUTPUT"
+
+      - name: Resolve run mode and base branch
+        id: base
+        env:
+          BRANCH: ${{ steps.branch.outputs.name }}
+          EVENT_NAME: ${{ github.event_name }}
+          LABEL_NAME: ${{ github.event.label.name }}
+        run: |
+          set -euo pipefail
+          mode="implement"
+          base="origin/main"
+          if [ "$LABEL_NAME" = "agent:fix" ]; then
+            mode="fix"
+            if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
+              git fetch origin "$BRANCH:refs/remotes/origin/$BRANCH"
+              base="origin/$BRANCH"
+            else
+              echo "agent:fix was requested, but $BRANCH does not exist yet. Falling back to origin/main."
+            fi
+          fi
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+          echo "base=$base" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare issue context
+        id: context
+        env:
+          ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
+          BRANCH: ${{ steps.branch.outputs.name }}
+          RUN_MODE: ${{ steps.base.outputs.mode }}
+        run: |
+          set -euo pipefail
+          mkdir -p .sandcastle/runtime
+          gh issue view "$ISSUE_NUMBER" --comments --json number,title,body,labels,comments > .sandcastle/runtime/issue.json
+
+          owner="${GH_REPO%%/*}"
+          gh api "repos/${GH_REPO}/pulls" \
+            --method GET \
+            -f state="open" \
+            -f head="${owner}:${BRANCH}" \
+            > .sandcastle/runtime/open-prs.json
+
+          pr_number=$(node -e "const fs=require('node:fs'); const prs=JSON.parse(fs.readFileSync('.sandcastle/runtime/open-prs.json','utf8')); console.log(prs[0]?.number ?? '')")
+          if [ -n "$pr_number" ]; then
+            gh pr view "$pr_number" --json number,title,body,baseRefName,headRefName,author,labels,commits,files,comments,reviews > .sandcastle/runtime/linked-pr.json
+            gh pr checks "$pr_number" > .sandcastle/runtime/linked-pr-checks.txt || true
+            gh pr diff "$pr_number" --patch > .sandcastle/runtime/linked-pr.diff || true
+          else
+            echo '{}' > .sandcastle/runtime/linked-pr.json
+            : > .sandcastle/runtime/linked-pr-checks.txt
+            : > .sandcastle/runtime/linked-pr.diff
+          fi
+
+          node <<'NODE'
+          const fs = require('node:fs');
+          const issue = JSON.parse(fs.readFileSync('.sandcastle/runtime/issue.json', 'utf8'));
+          const prs = JSON.parse(fs.readFileSync('.sandcastle/runtime/open-prs.json', 'utf8'));
+          const pr = prs[0] ? JSON.parse(fs.readFileSync('.sandcastle/runtime/linked-pr.json', 'utf8')) : null;
+          const checks = fs.readFileSync('.sandcastle/runtime/linked-pr-checks.txt', 'utf8').trim();
+          const diff = fs.readFileSync('.sandcastle/runtime/linked-pr.diff', 'utf8').trim();
+          const labels = issue.labels.map((label) => label.name).join(', ');
+          const comments = issue.comments
+            .map((comment, index) => `## Issue Comment ${index + 1} by ${comment.author.login}\n\n${comment.body}`)
+            .join('\n\n');
+          const prContext = pr
+            ? `# Existing Pull Request #${pr.number}: ${pr.title}\n\nBase: ${pr.baseRefName}\nHead: ${pr.headRefName}\n\n## PR body\n\n${pr.body || '(no body)'}\n\n## PR checks\n\n${checks || '(none)'}\n\n## PR comments, including Sandcastle reviews\n\n${pr.comments.map((comment, index) => `### PR Comment ${index + 1} by ${comment.author.login}\n\n${comment.body}`).join('\n\n') || '(none)'}\n\n## Prior GitHub reviews\n\n${pr.reviews.map((review, index) => `### Review ${index + 1} by ${review.author.login}\n\nState: ${review.state}\n\n${review.body || ''}`).join('\n\n') || '(none)'}\n\n## Current PR diff\n\n\`\`\`diff\n${diff || '(diff unavailable)'}\n\`\`\``
+            : 'No existing PR is open for this issue branch yet.';
+          const markdown = `# Issue #${issue.number}: ${issue.title}\n\nRun mode: ${process.env.RUN_MODE}\nLabels: ${labels}\n\n## Body\n\n${issue.body || '(no body)'}\n\n${comments ? `# Issue comments\n\n${comments}` : ''}\n\n# Linked PR context for fix/review loops\n\n${prContext}\n`;
+          fs.writeFileSync('.sandcastle/runtime/issue-context.md', markdown);
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `title=${issue.title.replace(/%/g, '%25').replace(/\n/g, '%0A').replace(/\r/g, '%0D')}\n`);
+          NODE
 
       - name: Run Sandcastle implementation agent
         env:
@@ -130,29 +181,31 @@ jobs:
           ISSUE_TITLE: ${{ steps.context.outputs.title }}
           ISSUE_CONTEXT_FILE: .sandcastle/runtime/issue-context.md
           SANDCASTLE_BRANCH: ${{ steps.branch.outputs.name }}
-          SANDCASTLE_BASE_BRANCH: origin/main
+          SANDCASTLE_BASE_BRANCH: ${{ steps.base.outputs.base }}
+          SANDCASTLE_RUN_MODE: ${{ steps.base.outputs.mode }}
           SANDCASTLE_RESULT_FILE: .sandcastle/runtime/sandcastle-result.json
         run: pnpm sandcastle:issue
 
       - name: Verify Sandcastle produced commits
         env:
           BRANCH: ${{ steps.branch.outputs.name }}
+          BASE_BRANCH: ${{ steps.base.outputs.base }}
         run: |
           set -euo pipefail
           git show-ref --verify "refs/heads/$BRANCH"
-          commit_count=$(git rev-list --count "origin/main..$BRANCH")
+          commit_count=$(git rev-list --count "${BASE_BRANCH}..$BRANCH")
           if [ "$commit_count" -eq 0 ]; then
-            echo "Sandcastle branch has no commits over origin/main." >&2
+            echo "Sandcastle branch has no commits over ${BASE_BRANCH}." >&2
             exit 1
           fi
-          git log --oneline "origin/main..$BRANCH"
+          git log --oneline "${BASE_BRANCH}..$BRANCH"
 
       - name: Push Sandcastle branch
         env:
           BRANCH: ${{ steps.branch.outputs.name }}
         run: git push --force-with-lease origin "$BRANCH"
 
-      - name: Open draft PR
+      - name: Open or reuse draft PR
         id: pr
         env:
           GH_TOKEN: ${{ secrets.CODEX_DISPATCH_TOKEN }}
@@ -167,16 +220,18 @@ jobs:
             echo
             echo "Implemented by the Sandcastle runner workflow."
             echo
-            echo "This PR is opened as a draft because a human still owns review, acceptance, and merge."
+            echo "This PR is opened as a draft because a human still owns final review, acceptance, and merge."
+            echo
+            echo "Automation loop: Verify must pass, then \`agent:review\` runs. If review returns COMMENT or REQUEST_CHANGES, the review workflow re-labels the issue with \`agent:fix\` for another Sandcastle implementation pass."
           } > "$body_file"
           title="Sandcastle #${ISSUE_NUMBER}: ${ISSUE_TITLE}"
           title="${title:0:256}"
           owner="${GH_REPO%%/*}"
-          existing_url=$(gh api "repos/${GH_REPO}/pulls" \
+          existing_payload=$(gh api "repos/${GH_REPO}/pulls" \
             --method GET \
             -f state="open" \
-            -f head="${owner}:${BRANCH}" \
-            --jq '.[0].html_url // ""')
+            -f head="${owner}:${BRANCH}")
+          existing_url=$(node -e "const prs=JSON.parse(process.argv[1]); console.log(prs[0]?.html_url ?? '')" "$existing_payload")
           if [ -n "$existing_url" ]; then
             pr_url="$existing_url"
           else
@@ -189,8 +244,51 @@ jobs:
               -F draft=true \
               --jq .html_url)
           fi
+          pr_number="${pr_url##*/}"
           echo "url=$pr_url" >> "$GITHUB_OUTPUT"
-          gh issue comment "$ISSUE_NUMBER" --body "Sandcastle opened draft PR: $pr_url"
+          echo "number=$pr_number" >> "$GITHUB_OUTPUT"
+          gh issue comment "$ISSUE_NUMBER" --body "Sandcastle opened or updated draft PR: $pr_url"
+
+      - name: Wait for current-head Verify to pass before review
+        env:
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+        run: |
+          set -euo pipefail
+          head_sha=$(gh pr view "$PR_NUMBER" --json headRefOid --jq .headRefOid)
+          echo "Waiting for Verify on PR #${PR_NUMBER} head ${head_sha}"
+          for attempt in $(seq 1 60); do
+            run_json=$(gh run list --workflow Verify --json databaseId,headSha,status,conclusion,url --limit 30 \
+              --jq ".[] | select(.headSha == \"${head_sha}\")" | head -n 1 || true)
+            if [ -n "$run_json" ]; then
+              echo "$run_json"
+              status=$(node -e "const data=JSON.parse(process.argv[1]); console.log(data.status ?? '')" "$run_json")
+              conclusion=$(node -e "const data=JSON.parse(process.argv[1]); console.log(data.conclusion ?? '')" "$run_json")
+              if [ "$status" = "completed" ] && [ "$conclusion" = "success" ]; then
+                exit 0
+              fi
+              if [ "$status" = "completed" ] && [ "$conclusion" != "success" ]; then
+                echo "PR Verify failed for ${head_sha}; not triggering review." >&2
+                exit 1
+              fi
+            else
+              echo "No Verify run found yet for ${head_sha}."
+            fi
+            sleep 10
+          done
+          echo "Timed out waiting for current-head PR Verify to pass; not triggering review." >&2
+          exit 1
+
+      - name: Trigger automatic Sandcastle review
+        env:
+          ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          PR_URL: ${{ steps.pr.outputs.url }}
+        run: |
+          set -euo pipefail
+          gh api "repos/${GH_REPO}/issues/${PR_NUMBER}/labels" \
+            --method POST \
+            -f labels[]=agent:review >/dev/null
+          gh issue comment "$ISSUE_NUMBER" --body "PR Verify passed. Sandcastle queued automatic review for ${PR_URL}."
 
       - name: Cleanup labels after success
         if: success() && github.event_name == 'issues'
@@ -209,4 +307,4 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           gh issue edit "$ISSUE_NUMBER" --add-label "agent:blocked" || true
-          gh issue comment "$ISSUE_NUMBER" --body "Sandcastle run failed. Workflow run: $RUN_URL. Re-run the workflow or re-add \`agent:implement\` after fixing the blocker." || true
+          gh issue comment "$ISSUE_NUMBER" --body "Sandcastle run failed. Workflow run: $RUN_URL. Re-run the workflow or re-add \`agent:implement\`/\`agent:fix\` after fixing the blocker." || true

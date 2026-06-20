@@ -30,6 +30,7 @@ jobs:
       GH_REPO: ${{ github.repository }}
       SANDCASTLE_IMAGE_NAME: sandcastle:clinical-agent-harness
       SANDCASTLE_AGENT_MODEL: claude-sonnet-4-5
+      SANDCASTLE_MAX_AUTO_FIXES: "3"
 
     steps:
       - name: Resolve PR number
@@ -88,6 +89,7 @@ jobs:
             .
 
       - name: Prepare PR review context
+        id: context
         env:
           PR_NUMBER: ${{ steps.pr.outputs.number }}
         run: |
@@ -105,8 +107,11 @@ jobs:
           const files = pr.files.map((file) => `- ${file.path} (+${file.additions}/-${file.deletions})`).join('\n');
           const comments = pr.comments.map((comment, index) => `## Comment ${index + 1} by ${comment.author.login}\n\n${comment.body}`).join('\n\n');
           const reviews = pr.reviews.map((review, index) => `## Review ${index + 1} by ${review.author.login}\n\nState: ${review.state}\n\n${review.body || ''}`).join('\n\n');
-          const markdown = `# Pull Request #${pr.number}: ${pr.title}\n\nAuthor: ${pr.author.login}\nBase: ${pr.baseRefName}\nHead: ${pr.headRefName}\nLabels: ${labels}\n\n## Body\n\n${pr.body || '(no body)'}\n\n## Files\n\n${files || '(none)'}\n\n## Checks\n\n${checks || '(none)'}\n\n# Comments\n\n${comments || '(none)'}\n\n# Prior Reviews\n\n${reviews || '(none)'}\n\n# Diff\n\n\`\`\`diff\n${diff}\n\`\`\`\n`;
+          const issueMatch = (pr.body || '').match(/(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+#(\d+)/i);
+          const issueNumber = issueMatch?.[1] ?? '';
+          const markdown = `# Pull Request #${pr.number}: ${pr.title}\n\nAuthor: ${pr.author.login}\nBase: ${pr.baseRefName}\nHead: ${pr.headRefName}\nLinked issue: ${issueNumber || '(not found)'}\nLabels: ${labels}\n\n## Body\n\n${pr.body || '(no body)'}\n\n## Files\n\n${files || '(none)'}\n\n## Checks\n\n${checks || '(none)'}\n\n# Comments\n\n${comments || '(none)'}\n\n# Prior Reviews\n\n${reviews || '(none)'}\n\n# Diff\n\n\`\`\`diff\n${diff}\n\`\`\`\n`;
           fs.writeFileSync('.sandcastle/runtime/pr-review-context.md', markdown);
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `issue_number=${issueNumber}\n`);
           NODE
 
       - name: Run Sandcastle review agent
@@ -126,12 +131,62 @@ jobs:
           test -s .sandcastle/runtime/sandcastle-review.md
           gh pr comment "$PR_NUMBER" --body-file .sandcastle/runtime/sandcastle-review.md
 
-      - name: Cleanup label after success
+      - name: Resolve review verdict
+        id: verdict
+        run: |
+          set -euo pipefail
+          verdict=$(node <<'NODE'
+          const fs = require('node:fs');
+          const review = fs.readFileSync('.sandcastle/runtime/sandcastle-review.md', 'utf8');
+          const match = review.match(/\*\*Verdict:\*\*\s*(APPROVE|COMMENT|REQUEST_CHANGES)/);
+          console.log(match?.[1] ?? 'COMMENT');
+          NODE
+          )
+          echo "verdict=$verdict" >> "$GITHUB_OUTPUT"
+          echo "Review verdict: $verdict"
+
+      - name: Cleanup review label after success
         if: success() && github.event_name == 'pull_request_target'
         env:
           PR_NUMBER: ${{ steps.pr.outputs.number }}
         run: |
           gh pr edit "$PR_NUMBER" --remove-label "agent:review" || true
+
+      - name: Queue automatic fix when review is not approved
+        if: success() && steps.verdict.outputs.verdict != 'APPROVE'
+        env:
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          ISSUE_NUMBER: ${{ steps.context.outputs.issue_number }}
+          REVIEW_VERDICT: ${{ steps.verdict.outputs.verdict }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          if [ -z "$ISSUE_NUMBER" ]; then
+            gh pr comment "$PR_NUMBER" --body "Sandcastle review returned ${REVIEW_VERDICT}, but no linked issue was found in the PR body, so automatic \`agent:fix\` was not queued. Workflow run: $RUN_URL"
+            exit 0
+          fi
+
+          non_approve_count=$(gh pr view "$PR_NUMBER" --json comments --jq '[.comments[] | select(.body | contains("<!-- sandcastle-review -->") and ((.body | contains("**Verdict:** REQUEST_CHANGES")) or (.body | contains("**Verdict:** COMMENT"))))] | length')
+          echo "Non-approve Sandcastle review count: $non_approve_count"
+
+          if [ "$non_approve_count" -gt "$SANDCASTLE_MAX_AUTO_FIXES" ]; then
+            gh issue edit "$ISSUE_NUMBER" --add-label "agent:blocked" || true
+            gh issue comment "$ISSUE_NUMBER" --body "Sandcastle stopped the automatic fix loop for PR #${PR_NUMBER}: ${non_approve_count} non-approve reviews exceeded max ${SANDCASTLE_MAX_AUTO_FIXES}. Human review needed. Latest review run: $RUN_URL"
+            gh pr comment "$PR_NUMBER" --body "Automatic fix loop paused after ${non_approve_count} non-approve Sandcastle reviews. Human review needed before more agent fixes."
+            exit 0
+          fi
+
+          gh issue comment "$ISSUE_NUMBER" --body "Sandcastle review for PR #${PR_NUMBER} returned ${REVIEW_VERDICT}. Queueing \`agent:fix\` so the implementation agent addresses the latest review findings. Review run: $RUN_URL"
+          gh api "repos/${GH_REPO}/issues/${ISSUE_NUMBER}/labels" \
+            --method POST \
+            -f labels[]=agent:fix >/dev/null
+
+      - name: Leave PR ready for human final review when approved
+        if: success() && steps.verdict.outputs.verdict == 'APPROVE'
+        env:
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+        run: |
+          gh pr comment "$PR_NUMBER" --body "Sandcastle review approved this PR. Automation stops here; human final review and merge are still required."
 
       - name: Comment on failure
         if: failure()
