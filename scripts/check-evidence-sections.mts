@@ -1,4 +1,4 @@
-import { parseArgs, readText, requireString, taskEvidencePath } from './harness-lib.mjs';
+import { parseArgs, readText, requireString, taskEvidencePath } from './harness-lib.mts';
 
 const args = parseArgs();
 const task = requireString(args.task, 'task');

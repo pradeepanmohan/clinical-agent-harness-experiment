@@ -1,5 +1,8 @@
 name: Sandcastle Review
 
+# Separate review workflow kept explicit for the S06 review-loop gate.
+# It checks out trusted main and reviews PR metadata/diffs only.
+
 on:
   pull_request_target:
     types: [labeled]

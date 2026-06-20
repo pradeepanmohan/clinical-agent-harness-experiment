@@ -91,6 +91,7 @@
     "docs/WORKFLOW.md",
     ".harness/evidence/S06-harness-hardening.md",
     ".harness/PROGRESS.md",
-    "package.json"
+    "package.json",
+    ".harness/TASKS.json"
   ]
 }

@@ -1,4 +1,4 @@
-import { listChangedFiles, matchesPattern, parseArgs, readPolicy, requireString } from './harness-lib.mjs';
+import { listChangedFiles, matchesPattern, parseArgs, readPolicy, requireString } from './harness-lib.mts';
 
 const args = parseArgs();
 const task = requireString(args.task, 'task');

@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { parseArgs, requireString } from './harness-lib.mjs';
+import { parseArgs, requireString } from './harness-lib.mts';
 
 const args = parseArgs();
 const task = requireString(args.task, 'task');

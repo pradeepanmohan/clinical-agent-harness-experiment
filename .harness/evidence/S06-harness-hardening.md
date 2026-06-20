@@ -9,10 +9,12 @@ Implemented harness discipline checks for Sandcastle task branches:
 - `scripts/check-evidence-sections.mts` checks for required evidence sections.
 - `scripts/harness-check.mts` runs the full local harness gate.
 - `sandcastle-implement.yml` now resolves the task id, runs the harness checks before pushing/opening the PR, and checks out with the configured dispatch token so workflow-file changes can be pushed by the recovery/manual path.
+- `sandcastle-review.yml` remains the separate trusted-main review workflow and is annotated as the S06 review-loop gate.
 
 ## Changed files
 
 - `.github/workflows/sandcastle-implement.yml`
+- `.github/workflows/sandcastle-review.yml`
 - `.harness/policies/allowed-files.json`
 - `.harness/PROGRESS.md`
 - `.harness/evidence/S06-harness-hardening.md`
