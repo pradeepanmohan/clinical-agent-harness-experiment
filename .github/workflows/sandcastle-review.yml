@@ -166,7 +166,8 @@ jobs:
             exit 0
           fi
 
-          non_approve_count=$(gh pr view "$PR_NUMBER" --json comments --jq '[.comments[] | select(.body | contains("<!-- sandcastle-review -->") and ((.body | contains("**Verdict:** REQUEST_CHANGES")) or (.body | contains("**Verdict:** COMMENT"))))] | length')
+          comments_json=$(gh pr view "$PR_NUMBER" --json comments)
+          non_approve_count=$(node -e "const data=JSON.parse(process.argv[1]); console.log(data.comments.filter(c => c.body.includes('<!-- sandcastle-review -->') && (c.body.includes('**Verdict:** REQUEST_CHANGES') || c.body.includes('**Verdict:** COMMENT'))).length)" "$comments_json")
           echo "Non-approve Sandcastle review count: $non_approve_count"
 
           if [ "$non_approve_count" -gt "$SANDCASTLE_MAX_AUTO_FIXES" ]; then
