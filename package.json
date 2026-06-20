@@ -14,7 +14,8 @@
     "sandcastle:issue": "tsx .sandcastle/run-issue.mts",
     "sandcastle:dry-run": "SANDCASTLE_DRY_RUN=1 tsx .sandcastle/run-issue.mts",
     "sandcastle:review": "tsx .sandcastle/run-review.mts",
-    "sandcastle:review:dry-run": "SANDCASTLE_DRY_RUN=1 tsx .sandcastle/run-review.mts"
+    "sandcastle:review:dry-run": "SANDCASTLE_DRY_RUN=1 tsx .sandcastle/run-review.mts",
+    "harness:check": "tsx scripts/harness-check.mts"
   },
   "devDependencies": {
     "@ai-hero/sandcastle": "0.10.0",

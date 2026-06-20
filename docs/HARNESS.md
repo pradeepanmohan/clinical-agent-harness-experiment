@@ -58,6 +58,30 @@ A task is done only when:
 - no unrelated work is included
 - human can review the PR without reconstructing the whole session
 
+## Harness discipline checks
+
+The local harness gate is:
+
+```bash
+pnpm harness:check -- --task S06 --base origin/main
+```
+
+It runs three small checks:
+
+1. changed files must match `.harness/policies/allowed-files.json` for the task id,
+2. the expected task evidence file must exist,
+3. the evidence file must include `## Summary`, `## Changed files`, `## Verification`, and `## Result` sections.
+
+The Sandcastle implementation workflow runs this gate after the agent commits and before it pushes the task branch or opens a PR. If the check fails, the issue is marked blocked instead of publishing an unsafe branch.
+
+## Manual override path
+
+A human may override the harness gate only by making an explicit follow-up commit that updates the task policy or evidence with the reason. Do not bypass the scripts silently. The override commit should explain:
+
+- which file or evidence requirement changed,
+- why the change is in scope for the task,
+- which verification command was rerun after the override.
+
 ## Failure handling
 
 If a task fails:

@@ -97,7 +97,17 @@ The agent handles one issue only. It should not select its own next task unless 
 
 `verify.yml` runs independently from the agent's self-report on every PR and push to `main`.
 
+Before a Sandcastle branch is pushed, the implementation workflow also runs:
+
+```bash
+pnpm harness:check -- --task <task-id> --base <base-ref>
+```
+
+That gate checks the changed files against the task allowlist, confirms the evidence file exists, and confirms evidence sections are present. If the gate fails, the issue is labeled `agent:blocked` and no review is queued.
+
 The implementation workflow waits for the PR `verify` check to pass before queueing review. If `verify` fails, the loop stops with `agent:blocked` instead of asking the reviewer to judge a known-red PR.
+
+Manual overrides are allowed only as explicit commits that update the policy or evidence and explain why the exception is in scope.
 
 ### 6. Review and auto-fix
 
