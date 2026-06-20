@@ -47,7 +47,7 @@
     {
       "id": "S05",
       "title": "Implement clinical notes",
-      "status": "pending",
+      "status": "completed",
       "priority": 7,
       "taskFile": ".harness/tasks/S05-clinical-notes.md"
     },
