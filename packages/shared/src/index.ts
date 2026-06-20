@@ -40,3 +40,11 @@ export {
   type CreateAppointmentInput,
   type UpdateAppointmentStatusInput
 } from "./appointment.js";
+
+export {
+  clinicalNoteListSchema,
+  clinicalNoteSchema,
+  createClinicalNoteSchema,
+  type ClinicalNote,
+  type CreateClinicalNoteInput
+} from "./clinical-note.js";
