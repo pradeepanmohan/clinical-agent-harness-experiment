@@ -31,7 +31,6 @@ export default async function DashboardPage() {
                   </div>
                   <div>
                     <span>Status: {appointment.status}</span>
-                    {appointment.reason !== undefined ? ` - ${appointment.reason}` : ""}
                   </div>
                 </li>
               ))}

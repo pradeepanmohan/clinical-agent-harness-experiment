@@ -36,8 +36,7 @@ export const appointmentWithDetailsSchema = z.object({
   doctorId: z.string().min(1),
   doctorName: z.string().min(1),
   scheduledAt: z.string().datetime(),
-  status: appointmentStatusEnum,
-  reason: z.string().optional()
+  status: appointmentStatusEnum
 });
 
 export const todayAppointmentListSchema = z.array(appointmentWithDetailsSchema);
