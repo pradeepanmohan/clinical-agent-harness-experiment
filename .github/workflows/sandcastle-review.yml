@@ -93,15 +93,16 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p .sandcastle/runtime
-          gh pr view "$PR_NUMBER" --json number,title,body,baseRefName,headRefName,author,labels,commits,files,comments,reviews,statusCheckRollup > .sandcastle/runtime/pr.json
+          gh pr view "$PR_NUMBER" --json number,title,body,baseRefName,headRefName,author,labels,commits,files,comments,reviews > .sandcastle/runtime/pr.json
+          gh pr checks "$PR_NUMBER" > .sandcastle/runtime/pr-checks.txt || true
           gh pr diff "$PR_NUMBER" --patch > .sandcastle/runtime/pr.diff
           node <<'NODE'
           const fs = require('node:fs');
           const pr = JSON.parse(fs.readFileSync('.sandcastle/runtime/pr.json', 'utf8'));
+          const checks = fs.readFileSync('.sandcastle/runtime/pr-checks.txt', 'utf8').trim();
           const diff = fs.readFileSync('.sandcastle/runtime/pr.diff', 'utf8');
           const labels = pr.labels.map((label) => label.name).join(', ');
           const files = pr.files.map((file) => `- ${file.path} (+${file.additions}/-${file.deletions})`).join('\n');
-          const checks = pr.statusCheckRollup.map((check) => `- ${check.workflowName || check.name}: ${check.status || ''} ${check.conclusion || ''}`).join('\n');
           const comments = pr.comments.map((comment, index) => `## Comment ${index + 1} by ${comment.author.login}\n\n${comment.body}`).join('\n\n');
           const reviews = pr.reviews.map((review, index) => `## Review ${index + 1} by ${review.author.login}\n\nState: ${review.state}\n\n${review.body || ''}`).join('\n\n');
           const markdown = `# Pull Request #${pr.number}: ${pr.title}\n\nAuthor: ${pr.author.login}\nBase: ${pr.baseRefName}\nHead: ${pr.headRefName}\nLabels: ${labels}\n\n## Body\n\n${pr.body || '(no body)'}\n\n## Files\n\n${files || '(none)'}\n\n## Checks\n\n${checks || '(none)'}\n\n# Comments\n\n${comments || '(none)'}\n\n# Prior Reviews\n\n${reviews || '(none)'}\n\n# Diff\n\n\`\`\`diff\n${diff}\n\`\`\`\n`;
