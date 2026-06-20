@@ -82,6 +82,15 @@ A human may override the harness gate only by making an explicit follow-up commi
 - why the change is in scope for the task,
 - which verification command was rerun after the override.
 
+## Validation and proof tasks
+
+Not all issues are feature implementations. Some issues exist solely to validate infrastructure or workflow operation (e.g., issue #36 validates the full autonomous Sandcastle flow). Such proof exercises:
+
+- Are not formal tasks with `.harness/tasks/*.md` files
+- Reuse an existing task id's allowed-files policy when the proof only touches documentation
+- Should not create circular documentation that references themselves
+- Should keep changes minimal and focused on demonstrating the workflow works
+
 ## Failure handling
 
 If a task fails:

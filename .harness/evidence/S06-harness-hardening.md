@@ -50,33 +50,3 @@ Key observed results:
 ## Result
 
 S06 implementation is ready for PR verification and Sandcastle review. Human final review and merge remain the terminal gate.
-
-## Full-flow proof (Issue #36)
-
-Issue #36 is a clean proof-of-concept to validate the complete Sandcastle no-intervention flow from updated `main` after PR #30 (this S06 harness hardening) and PR #35 (Sandcastle verify wait fix) have merged.
-
-**Goal**: Prove the autonomous flow works end-to-end:
-- Issue with `agent:implement` label
-- Sandcastle implementation commit
-- Harness checks pass
-- Branch push and draft PR creation
-- PR Verify passes independently
-- Workflow auto-queues `agent:review`
-- Sandcastle Review posts findings
-- If needed, `agent:fix` loop runs
-- Human final review and merge
-
-**Scope constraint**: Issue #36 uses the same S06 task id and only touches files already allowed by the S06 policy:
-- `docs/HARNESS.md`
-- `docs/WORKFLOW.md`
-- `.harness/evidence/S06-harness-hardening.md`
-- `.harness/PROGRESS.md`
-
-This constraint ensures the merged harness checks can pass without requiring manual recovery or policy overrides.
-
-**Changes made**:
-- Added full-flow validation section to `docs/WORKFLOW.md` documenting the proof intent
-- Added this proof section to `.harness/evidence/S06-harness-hardening.md`
-- Updated `.harness/PROGRESS.md` with proof note
-
-**Verification**: All S06 verification commands pass with the proof documentation added.
