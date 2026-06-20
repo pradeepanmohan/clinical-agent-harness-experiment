@@ -38,6 +38,14 @@ The repository now has a minimal pnpm/Turbo monorepo with Next.js, NestJS, share
 - Added API tests covering create, list, get by id, update, missing id, required full name, required specialty, and HTTP runtime wiring.
 - Ran S02 verification commands and wrote `.harness/evidence/S02-doctor-crud.md`.
 
+## Completed SMOKE test
+
+- Validated the Sandcastle label harness end-to-end workflow.
+- Confirmed `agent:implement` label triggers Sandcastle Docker worktree runner.
+- All verification commands (lint, typecheck, test, build) passed in the Sandcastle environment.
+- Evidence documented in `.harness/evidence/SMOKE-sandcastle-label-e2e.md`.
+- Zero product code changes as required.
+
 ## Next task
 
 S03: Implement appointment scheduling.
@@ -57,3 +65,5 @@ A future Codex run should start by reading:
 - `.harness/evidence/S02-doctor-crud.md`
 
 S02 verification passed locally. The S01 and S02 API services store records in memory; DB schema and migrations exist, but runtime database-backed repositories remain future work.
+
+The Sandcastle label harness has been validated end-to-end through the SMOKE test. The workflow can now handle `agent:implement` labeled issues and will support `agent:review` labeled PRs.
