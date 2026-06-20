@@ -30,10 +30,13 @@ export {
 export {
   appointmentListSchema,
   appointmentSchema,
+  appointmentWithDetailsSchema,
   createAppointmentSchema,
+  todayAppointmentListSchema,
   updateAppointmentStatusSchema,
   type Appointment,
   type AppointmentStatus,
+  type AppointmentWithDetails,
   type CreateAppointmentInput,
   type UpdateAppointmentStatusInput
 } from "./appointment.js";
