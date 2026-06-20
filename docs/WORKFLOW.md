@@ -164,6 +164,22 @@ Scope labels:
 - `harness:s02`, `harness:s03`, etc.
 - `scope:clinical-app`
 
+## Full-flow validation
+
+Issue #36 validates the complete no-manual-intervention Sandcastle flow after PR #30 (harness hardening) and PR #35 (Sandcastle verify wait fix):
+
+- Issue labeled `agent:implement`
+- Sandcastle implements and commits
+- Harness checks pass
+- Branch pushed, draft PR opened
+- PR Verify passes
+- `agent:review` queued automatically
+- Sandcastle Review posts verdict
+- If needed, `agent:fix` loop runs
+- Human performs final review and merge
+
+This proof issue intentionally uses only S06-allowed files so the harness checks can pass without manual recovery intervention.
+
 ## Why this matters
 
 Long chats rot. Durable files do not. The workflow should make progress inspectable through git, tests, evidence, PRs, and review comments rather than through a giant conversation transcript.

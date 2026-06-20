@@ -83,6 +83,12 @@ The repository now has a minimal pnpm/Turbo monorepo with Next.js, NestJS, share
 - Documented the manual override path in `docs/HARNESS.md` and `docs/WORKFLOW.md`.
 - Wrote `.harness/evidence/S06-harness-hardening.md`.
 
+## Issue #36: Full Sandcastle flow proof
+
+Issue #36 is a no-manual-intervention flow proof from updated `main` after PR #30 and PR #35 merged. It validates the complete autonomous Sandcastle cycle: `agent:implement` → harness checks → branch push → draft PR → Verify → `agent:review` → Sandcastle Review → optional `agent:fix` loop → human merge.
+
+This proof intentionally uses only S06-allowed files so the harness checks pass without manual recovery.
+
 ## Next task
 
 Next task from `.harness/TASKS.json` after S06 human review and merge.
