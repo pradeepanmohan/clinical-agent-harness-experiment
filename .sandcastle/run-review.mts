@@ -1,5 +1,5 @@
 #!/usr/bin/env tsx
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { claudeCode, run } from "@ai-hero/sandcastle";
 import { docker } from "@ai-hero/sandcastle/sandboxes/docker";
@@ -154,7 +154,18 @@ const payload = {
 writeFileSync(resolve(repoRoot, outputFile), JSON.stringify(payload, null, 2));
 console.log(JSON.stringify(payload, null, 2));
 
-const review = readFileSync(absoluteReviewFile, "utf8");
+const reviewSourceFile = existsSync(absoluteReviewFile)
+  ? absoluteReviewFile
+  : result.preservedWorktreePath
+    ? resolve(result.preservedWorktreePath, reviewFile)
+    : absoluteReviewFile;
+
+const review = readFileSync(reviewSourceFile, "utf8");
 if (!review.includes("<!-- sandcastle-review -->") || !review.includes("**Verdict:**")) {
   throw new Error(`Review file ${reviewFile} is missing the required Sandcastle review marker or verdict.`);
+}
+
+if (reviewSourceFile !== absoluteReviewFile) {
+  mkdirSync(dirname(absoluteReviewFile), { recursive: true });
+  writeFileSync(absoluteReviewFile, review);
 }
