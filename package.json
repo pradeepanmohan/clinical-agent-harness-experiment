@@ -10,6 +10,7 @@
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
     "verify": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+    "pr-walkthrough": "node scripts/pr-walkthrough.mjs",
     "sandcastle:issue": "tsx .sandcastle/run-issue.mts",
     "sandcastle:dry-run": "SANDCASTLE_DRY_RUN=1 tsx .sandcastle/run-issue.mts"
   },
