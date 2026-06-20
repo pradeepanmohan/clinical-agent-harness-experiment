@@ -8,6 +8,8 @@ Implement appointment scheduling between existing patients and doctors.
 
 - `apps/api/src/appointments/**`
 - `apps/api/src/app.module.ts`
+- `apps/api/src/doctors/doctors.module.ts`
+- `apps/api/src/patients/patients.module.ts`
 - `apps/web/src/app/appointments/**`
 - `packages/db/src/schema.ts`
 - `packages/db/src/migrations/**`

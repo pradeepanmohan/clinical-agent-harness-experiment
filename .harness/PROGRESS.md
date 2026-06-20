@@ -46,9 +46,18 @@ The repository now has a minimal pnpm/Turbo monorepo with Next.js, NestJS, share
 - Evidence documented in `.harness/evidence/SMOKE-sandcastle-label-e2e.md`.
 - Zero product code changes as required.
 
+## Completed S03
+
+- Added shared appointment validation and DTO types.
+- Added Drizzle `appointments` table schema with foreign keys to patients and doctors, and SQL migration.
+- Added NestJS `AppointmentsModule`, controller, and in-memory service for create, list, get by id, and update status.
+- Added appointment list and create form pages in the Next.js app.
+- Added API tests covering create, list, get by id, update status, missing patient/doctor, scheduled in the past, and invalid status.
+- Ran S03 verification commands and wrote `.harness/evidence/S03-appointments.md`.
+
 ## Next task
 
-S03: Implement appointment scheduling.
+S04: Implement today's appointments dashboard.
 
 ## Handoff note
 
@@ -61,9 +70,9 @@ A future Codex run should start by reading:
 - `docs/WORKFLOW.md`
 - `.harness/TASKS.json`
 - `.harness/PROGRESS.md`
-- `.harness/tasks/S03-appointments.md`
-- `.harness/evidence/S02-doctor-crud.md`
+- `.harness/tasks/S04-today-dashboard.md`
+- `.harness/evidence/S03-appointments.md`
 
-S02 verification passed locally. The S01 and S02 API services store records in memory; DB schema and migrations exist, but runtime database-backed repositories remain future work.
+S03 verification passed locally. The S01, S02, and S03 API services store records in memory; DB schema and migrations exist, but runtime database-backed repositories remain future work.
 
 The Sandcastle label harness has been validated end-to-end through the SMOKE test. The workflow can now handle `agent:implement` labeled issues and will support `agent:review` labeled PRs.

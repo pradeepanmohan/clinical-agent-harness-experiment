@@ -26,3 +26,14 @@ export {
   type Doctor,
   type UpdateDoctorInput
 } from "./doctor.js";
+
+export {
+  appointmentListSchema,
+  appointmentSchema,
+  createAppointmentSchema,
+  updateAppointmentStatusSchema,
+  type Appointment,
+  type AppointmentStatus,
+  type CreateAppointmentInput,
+  type UpdateAppointmentStatusInput
+} from "./appointment.js";

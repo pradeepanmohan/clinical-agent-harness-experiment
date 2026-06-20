@@ -33,7 +33,7 @@
     {
       "id": "S03",
       "title": "Implement appointment scheduling",
-      "status": "pending",
+      "status": "completed",
       "priority": 5,
       "taskFile": ".harness/tasks/S03-appointments.md"
     },
