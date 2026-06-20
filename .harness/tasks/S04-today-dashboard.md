@@ -9,9 +9,12 @@ Create a simple dashboard that shows today's appointments with patient, doctor, 
 - `apps/api/src/appointments/**`
 - `apps/web/src/app/**`
 - `packages/shared/src/appointment.ts`
+- `packages/shared/src/index.ts`
 - `tests/**`
 - `.harness/evidence/S04-today-dashboard.md`
 - `.harness/PROGRESS.md`
+- `.harness/tasks/S04-today-dashboard.md`
+- `.harness/policies/allowed-files.json`
 
 ## Acceptance criteria
 

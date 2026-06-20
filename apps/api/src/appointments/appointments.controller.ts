@@ -1,6 +1,7 @@
 import { BadRequestException, Body, Controller, Get, Inject, Param, Patch, Post } from "@nestjs/common";
 import {
   type Appointment,
+  type AppointmentWithDetails,
   createAppointmentSchema,
   type CreateAppointmentInput,
   updateAppointmentStatusSchema,
@@ -21,6 +22,11 @@ export class AppointmentsController {
   @Get()
   list(): Appointment[] {
     return this.appointmentsService.list();
+  }
+
+  @Get("today")
+  listToday(): AppointmentWithDetails[] {
+    return this.appointmentsService.listToday();
   }
 
   @Get(":id")

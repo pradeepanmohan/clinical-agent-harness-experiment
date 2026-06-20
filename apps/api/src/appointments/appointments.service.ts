@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from "@nestjs/comm
 
 import {
   type Appointment,
+  type AppointmentWithDetails,
   type CreateAppointmentInput,
   type UpdateAppointmentStatusInput
 } from "@clinical/shared";
@@ -72,5 +73,31 @@ export class AppointmentsService {
 
     this.appointments.set(id, updated);
     return updated;
+  }
+
+  listToday(): AppointmentWithDetails[] {
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+
+    const todayAppointments = Array.from(this.appointments.values()).filter((appointment) => {
+      const scheduledAt = new Date(appointment.scheduledAt);
+      return scheduledAt >= startOfToday && scheduledAt < endOfToday;
+    });
+
+    return todayAppointments.map((appointment) => {
+      const patient = this.patientsService.get(appointment.patientId);
+      const doctor = this.doctorsService.get(appointment.doctorId);
+
+      return {
+        id: appointment.id,
+        patientId: appointment.patientId,
+        patientName: patient.fullName,
+        doctorId: appointment.doctorId,
+        doctorName: doctor.fullName,
+        scheduledAt: appointment.scheduledAt,
+        status: appointment.status
+      };
+    });
   }
 }

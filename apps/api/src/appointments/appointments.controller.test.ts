@@ -8,6 +8,20 @@ import { AppointmentsService } from "./appointments.service.js";
 
 const futureDate = (): string => new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
+const todayDate = (): string => {
+  const now = new Date();
+  const hours = now.getHours();
+  now.setHours(hours < 23 ? hours + 1 : 23, 30, 0, 0);
+  return now.toISOString();
+};
+
+const tomorrowDate = (): string => {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(14, 0, 0, 0);
+  return tomorrow.toISOString();
+};
+
 describe("AppointmentsController", () => {
   let controller: AppointmentsController;
   let doctorId: string;
@@ -191,6 +205,84 @@ describe("AppointmentsController", () => {
       expect(() => controller.updateStatus(created.id, { status: "invalid" })).toThrow(
         BadRequestException
       );
+    });
+  });
+
+  describe("listToday", () => {
+    it("returns empty list when no appointments today", () => {
+      controller.create({
+        patientId,
+        doctorId,
+        scheduledAt: tomorrowDate()
+      });
+
+      const today = controller.listToday();
+      expect(today).toEqual([]);
+    });
+
+    it("returns today's appointments with patient and doctor details", () => {
+      const todayAppt = controller.create({
+        patientId,
+        doctorId,
+        scheduledAt: todayDate()
+      });
+
+      const today = controller.listToday();
+      expect(today).toHaveLength(1);
+      expect(today[0]!.id).toBe(todayAppt.id);
+      expect(today[0]!.patientName).toBe("Asha Kumar");
+      expect(today[0]!.doctorName).toBe("Dr. Ravi Menon");
+      expect(today[0]!.scheduledAt).toBe(todayAppt.scheduledAt);
+      expect(today[0]!.status).toBe("scheduled");
+    });
+
+    it("filters by date correctly", () => {
+      controller.create({
+        patientId,
+        doctorId,
+        scheduledAt: todayDate()
+      });
+      controller.create({
+        patientId,
+        doctorId,
+        scheduledAt: tomorrowDate()
+      });
+
+      const today = controller.listToday();
+      expect(today).toHaveLength(1);
+      expect(new Date(today[0]!.scheduledAt).getDate()).toBe(new Date().getDate());
+    });
+
+    it("excludes tomorrow's appointments", () => {
+      controller.create({
+        patientId,
+        doctorId,
+        scheduledAt: tomorrowDate()
+      });
+
+      const today = controller.listToday();
+      expect(today).toEqual([]);
+    });
+
+    it("returns multiple today's appointments", () => {
+      controller.create({
+        patientId,
+        doctorId,
+        scheduledAt: todayDate()
+      });
+      controller.create({
+        patientId,
+        doctorId,
+        scheduledAt: todayDate()
+      });
+      controller.create({
+        patientId,
+        doctorId,
+        scheduledAt: tomorrowDate()
+      });
+
+      const today = controller.listToday();
+      expect(today).toHaveLength(2);
     });
   });
 });

@@ -58,5 +58,17 @@
     ".harness/PROGRESS.md",
     ".harness/TASKS.json",
     ".harness/policies/allowed-files.json"
+  ],
+  "S04": [
+    "apps/api/src/appointments/**",
+    "apps/web/src/app/**",
+    "packages/shared/src/appointment.ts",
+    "packages/shared/src/index.ts",
+    "tests/**",
+    ".harness/evidence/S04-today-dashboard.md",
+    ".harness/PROGRESS.md",
+    ".harness/TASKS.json",
+    ".harness/tasks/S04-today-dashboard.md",
+    ".harness/policies/allowed-files.json"
   ]
 }
