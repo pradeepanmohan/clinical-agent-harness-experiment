@@ -127,7 +127,7 @@ jobs:
           gh pr comment "$PR_NUMBER" --body-file .sandcastle/runtime/sandcastle-review.md
 
       - name: Cleanup label after success
-        if: success() && github.event_name == 'pull_request'
+        if: success() && github.event_name == 'pull_request_target'
         env:
           PR_NUMBER: ${{ steps.pr.outputs.number }}
         run: |
