@@ -158,6 +158,7 @@ jobs:
       - name: Queue automatic fix when review is not approved
         if: success() && steps.verdict.outputs.verdict != 'APPROVE'
         env:
+          GH_TOKEN: ${{ secrets.CODEX_DISPATCH_TOKEN }}
           PR_NUMBER: ${{ steps.pr.outputs.number }}
           ISSUE_NUMBER: ${{ steps.context.outputs.issue_number }}
           REVIEW_VERDICT: ${{ steps.verdict.outputs.verdict }}
