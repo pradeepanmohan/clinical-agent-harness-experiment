@@ -1,15 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { use, useState } from "react";
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_CLINICAL_API_URL ?? "http://localhost:3001";
 
-export default async function NewClinicalNotePage({
-  params
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
+interface PageProps {
+  params: Promise<{
+    id: string;
+  }>;
+}
+
+export default function NewClinicalNotePage({ params }: PageProps) {
+  const { id } = use(params);
   const [noteText, setNoteText] = useState("");
   const [error, setError] = useState<string | undefined>(undefined);
   const [submitting, setSubmitting] = useState(false);

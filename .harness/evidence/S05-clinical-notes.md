@@ -43,7 +43,8 @@ Allow creating and viewing clinical notes for an appointment.
    - Notes are NOT shown in broad appointment list (`/appointments`)
 
 2. **New note form** (`apps/web/src/app/appointments/[id]/notes/new/page.tsx`)
-   - Client component with textarea for noteText
+   - Client component using React.use() to unwrap Next.js 15 async params
+   - Textarea for noteText with client-side state management
    - Form validation requires noteText
    - POSTs to `/clinical-notes` endpoint
    - Redirects to appointment detail on success
@@ -110,7 +111,14 @@ Within allowed scope:
 2. **Appointment association**: Service validates appointment exists before creating note
 3. **No notes in list views**: Notes only appear on appointment detail page, not in `/appointments` list
 4. **In-memory storage**: Consistent with other services (patients, doctors, appointments)
-5. **Next.js 15 async params**: Updated to use `Promise<{ id: string }>` pattern for route params
+5. **Next.js 15 async params**: Client component uses React.use() to unwrap Promise params (required in Next.js 15 App Router)
+6. **Component architecture**: Fixed initial async/client hybrid error by using React.use() for proper Next.js 15 client component param handling
+
+## Sandcastle review fix
+
+The initial implementation had a critical React component error: the new note page was marked `"use client"` with client hooks (`useState`) but also declared as an async server component with `await params`. This is invalid in React.
+
+**Fix applied**: Changed the component to use React's `use()` hook to unwrap the Promise params, which is the correct pattern for client components in Next.js 15. This maintains the client-side form state while properly handling Next.js 15's async params requirement.
 
 ## Out of scope (as specified)
 
