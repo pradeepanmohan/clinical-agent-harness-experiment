@@ -70,5 +70,27 @@
     ".harness/TASKS.json",
     ".harness/tasks/S04-today-dashboard.md",
     ".harness/policies/allowed-files.json"
+  ],
+  "S05": [
+    "apps/api/src/clinical-notes/**",
+    "apps/api/src/app.module.ts",
+    "apps/web/src/app/appointments/**",
+    "packages/db/src/schema.ts",
+    "packages/shared/src/clinical-note.ts",
+    "packages/shared/src/index.ts",
+    ".harness/evidence/S05-clinical-notes.md",
+    ".harness/PROGRESS.md",
+    ".harness/TASKS.json",
+    ".harness/policies/allowed-files.json"
+  ],
+  "S06": [
+    "scripts/**",
+    ".harness/policies/**",
+    ".github/workflows/**",
+    "docs/HARNESS.md",
+    "docs/WORKFLOW.md",
+    ".harness/evidence/S06-harness-hardening.md",
+    ".harness/PROGRESS.md",
+    "package.json"
   ]
 }

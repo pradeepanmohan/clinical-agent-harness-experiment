@@ -74,9 +74,17 @@ The repository now has a minimal pnpm/Turbo monorepo with Next.js, NestJS, share
 - Notes are only shown on appointment detail pages, not in broad list views.
 - Ran S05 verification commands and wrote `.harness/evidence/S05-clinical-notes.md`.
 
+## Completed S06
+
+- Added local harness check scripts for allowed files, evidence existence, and evidence section validation.
+- Added `pnpm harness:check` as the combined task gate.
+- Updated the Sandcastle implementation workflow to resolve the task id and run the harness gate before pushing/opening a PR.
+- Documented the manual override path in `docs/HARNESS.md` and `docs/WORKFLOW.md`.
+- Wrote `.harness/evidence/S06-harness-hardening.md`.
+
 ## Next task
 
-S06 or next task from `.harness/TASKS.json`.
+Next task from `.harness/TASKS.json` after S06 human review and merge.
 
 ## Handoff note
 
