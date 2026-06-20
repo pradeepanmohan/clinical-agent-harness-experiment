@@ -74,6 +74,13 @@ The repository now has a minimal pnpm/Turbo monorepo with Next.js, NestJS, share
 - Notes are only shown on appointment detail pages, not in broad list views.
 - Ran S05 verification commands and wrote `.harness/evidence/S05-clinical-notes.md`.
 
+## Completed S06B Full Flow Proof
+
+- Added `docs/SANDCASTLE_FULL_FLOW_PROOF.md` documenting the complete autonomous Sandcastle workflow from issue to draft PR through verify and review.
+- Explicitly confirmed that human merge remains the final gate.
+- This is a no-manual-implementation proof validating the full Sandcastle cycle can run without human intervention up to the final review/merge step.
+- Ran verification commands and wrote `.harness/evidence/SANDCASTLE-full-flow-proof.md`.
+
 ## Next task
 
 S06 or next task from `.harness/TASKS.json`.
@@ -94,4 +101,4 @@ A future Codex run should start by reading:
 
 S05 verification passed locally. The S01, S02, S03, S04, and S05 API services store records in memory; DB schema and migrations exist, but runtime database-backed repositories remain future work.
 
-The Sandcastle label harness has been validated end-to-end through the SMOKE test. The workflow can now handle `agent:implement` labeled issues and will support `agent:review` labeled PRs.
+The Sandcastle label harness has been validated end-to-end through the SMOKE test and the S06B full flow proof. The workflow can handle `agent:implement` labeled issues, run independent PR verification, trigger `agent:review` on PRs, and execute automatic fix iterations up to a safety cap before stopping at the human merge gate.
