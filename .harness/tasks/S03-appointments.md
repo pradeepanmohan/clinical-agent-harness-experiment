@@ -12,9 +12,12 @@ Implement appointment scheduling between existing patients and doctors.
 - `packages/db/src/schema.ts`
 - `packages/db/src/migrations/**`
 - `packages/shared/src/appointment.ts`
+- `packages/shared/src/index.ts`
 - `tests/**`
 - `.harness/evidence/S03-appointments.md`
 - `.harness/PROGRESS.md`
+- `.harness/TASKS.json`
+- `.harness/policies/allowed-files.json`
 
 ## Acceptance criteria
 
