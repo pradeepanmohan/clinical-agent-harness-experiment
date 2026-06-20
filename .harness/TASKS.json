@@ -40,7 +40,7 @@
     {
       "id": "S04",
       "title": "Implement today's appointments dashboard",
-      "status": "pending",
+      "status": "completed",
       "priority": 6,
       "taskFile": ".harness/tasks/S04-today-dashboard.md"
     },
