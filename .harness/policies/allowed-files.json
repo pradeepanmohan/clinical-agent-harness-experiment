@@ -110,5 +110,14 @@
     ".harness/policies/allowed-files.json",
     ".harness/TASKS.json",
     ".harness/PROGRESS.md"
+  ],
+  "S09": [
+    "apps/api/src/doctors/**",
+    "apps/web/src/app/doctors/**",
+    ".harness/tasks/S09-doctor-search.md",
+    ".harness/evidence/S09-doctor-search.md",
+    ".harness/policies/allowed-files.json",
+    ".harness/TASKS.json",
+    ".harness/PROGRESS.md"
   ]
 }

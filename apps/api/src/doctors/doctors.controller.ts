@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, Inject, Param, Patch, Post } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Get, Inject, Param, Patch, Post, Query } from "@nestjs/common";
 import {
   createDoctorSchema,
   type CreateDoctorInput,
@@ -19,8 +19,8 @@ export class DoctorsController {
   }
 
   @Get()
-  list(): Doctor[] {
-    return this.doctorsService.list();
+  list(@Query("q") q?: string): Doctor[] {
+    return this.doctorsService.list(q);
   }
 
   @Get(":id")

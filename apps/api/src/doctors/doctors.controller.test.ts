@@ -100,6 +100,55 @@ describe("DoctorsController", () => {
       controller.create({ fullName: "Dr. Required Specialty", specialty: "" })
     ).toThrow(BadRequestException);
   });
+
+  it("lists all doctors when no query is provided", async () => {
+    const controller = await createController();
+    controller.create({ fullName: "Dr. Alice Anderson", specialty: "Cardiology" });
+    controller.create({ fullName: "Dr. Bob Brown", specialty: "Neurology" });
+
+    expect(controller.list()).toHaveLength(2);
+  });
+
+  it("lists all doctors when query is whitespace", async () => {
+    const controller = await createController();
+    controller.create({ fullName: "Dr. Alice Anderson", specialty: "Cardiology" });
+    controller.create({ fullName: "Dr. Bob Brown", specialty: "Neurology" });
+
+    expect(controller.list("  ")).toHaveLength(2);
+  });
+
+  it("filters doctors by full name case-insensitively", async () => {
+    const controller = await createController();
+    controller.create({ fullName: "Dr. Alice Anderson", specialty: "Cardiology" });
+    controller.create({ fullName: "Dr. Bob Brown", specialty: "Neurology" });
+    controller.create({ fullName: "Dr. Charlie Chen", specialty: "Pediatrics" });
+
+    const results = controller.list("alice");
+    expect(results).toHaveLength(1);
+    expect(results[0]?.fullName).toBe("Dr. Alice Anderson");
+  });
+
+  it("filters doctors by specialty case-insensitively", async () => {
+    const controller = await createController();
+    controller.create({ fullName: "Dr. Alice Anderson", specialty: "Cardiology" });
+    controller.create({ fullName: "Dr. Bob Brown", specialty: "Neurology" });
+    controller.create({ fullName: "Dr. Charlie Chen", specialty: "Cardiology" });
+
+    const results = controller.list("CARDIOLOGY");
+    expect(results).toHaveLength(2);
+    expect(results.map(d => d.fullName)).toEqual([
+      "Dr. Alice Anderson",
+      "Dr. Charlie Chen"
+    ]);
+  });
+
+  it("returns empty list when no doctors match the query", async () => {
+    const controller = await createController();
+    controller.create({ fullName: "Dr. Alice Anderson", specialty: "Cardiology" });
+    controller.create({ fullName: "Dr. Bob Brown", specialty: "Neurology" });
+
+    expect(controller.list("xyz")).toEqual([]);
+  });
 });
 
 

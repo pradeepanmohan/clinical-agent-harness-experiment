@@ -103,9 +103,19 @@ After merging PR #38 (review artifact extraction recovery) and PR #41 (dispatch 
 - Added 6 API tests covering search behavior including case-insensitivity and no-match scenarios.
 - Ran S07 verification commands and wrote `.harness/evidence/S07-patient-search.md`.
 
+## Completed S09
+
+- Added doctor search functionality via `GET /doctors?q=<term>` endpoint.
+- Service filters doctors by fullName or specialty case-insensitively.
+- Added search form to doctor list page with input field named `q`.
+- Implemented distinct empty states: "No doctors yet." vs "No doctors match your search."
+- Added 6 API tests covering search behavior including case-insensitivity and no-match scenarios.
+- Follows the same pattern as S07 for consistency.
+- Ran S09 verification commands and wrote `.harness/evidence/S09-doctor-search.md`.
+
 ## Next task
 
-Next task from `.harness/TASKS.json` after S07 human review and merge.
+Next task from `.harness/TASKS.json` after S09 human review and merge.
 
 ## Handoff note
 
