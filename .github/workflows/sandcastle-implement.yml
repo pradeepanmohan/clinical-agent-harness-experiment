@@ -307,21 +307,46 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: ${{ steps.branch.outputs.name }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
         run: |
           set -euo pipefail
+          head_sha=$(gh api "repos/${GH_REPO}/pulls/${PR_NUMBER}" --jq .head.sha)
+          echo "Waiting for Verify on PR #${PR_NUMBER} head ${head_sha} (${BRANCH})"
           for attempt in $(seq 1 60); do
-            latest=$(gh run list --workflow Verify --branch "$BRANCH" --limit 1)
-            echo "$latest"
-            if echo "$latest" | grep -Eq '^completed[[:space:]]+success'; then
-              exit 0
-            fi
-            if echo "$latest" | grep -Eq '^completed[[:space:]]+(failure|cancelled|timed_out)'; then
-              echo "PR Verify failed; not triggering review." >&2
-              exit 1
-            fi
+            runs_json=$(gh run list \
+              --workflow Verify \
+              --branch "$BRANCH" \
+              --limit 20 \
+              --json databaseId,status,conclusion,headSha,url,event,createdAt)
+            printf '%s\n' "$runs_json"
+            verdict=$(RUNS_JSON="$runs_json" HEAD_SHA="$head_sha" node -e '
+            const runs = JSON.parse(process.env.RUNS_JSON || "[]");
+            const head = process.env.HEAD_SHA;
+            const matching = runs.filter((run) => run.headSha === head);
+            if (matching.length === 0) {
+              console.log("pending:no-run-for-current-head");
+              process.exit(0);
+            }
+            const completed = matching.find((run) => run.status === "completed");
+            if (!completed) {
+              console.log("pending:run-in-progress");
+              process.exit(0);
+            }
+            console.log(`${completed.conclusion}:${completed.databaseId}:${completed.url}`);
+            ')
+            echo "Verify verdict for ${head_sha}: ${verdict}"
+            case "$verdict" in
+              success:*)
+                exit 0
+                ;;
+              failure:*|cancelled:*|timed_out:*)
+                echo "PR Verify failed for current head ${head_sha}; not triggering review." >&2
+                exit 1
+                ;;
+            esac
             sleep 10
           done
-          echo "Timed out waiting for PR Verify to pass; not triggering review." >&2
+          echo "Timed out waiting for PR Verify to pass for current head ${head_sha}; not triggering review." >&2
           exit 1
 
       - name: Trigger automatic Sandcastle review
