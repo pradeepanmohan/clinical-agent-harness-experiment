@@ -101,5 +101,14 @@
     ".harness/policies/allowed-files.json",
     ".harness/evidence/42-strict-automation-proof.md",
     ".harness/TASKS.json"
+  ],
+  "S07": [
+    "apps/api/src/patients/**",
+    "apps/web/src/app/patients/**",
+    ".harness/tasks/S07-patient-search.md",
+    ".harness/evidence/S07-patient-search.md",
+    ".harness/policies/allowed-files.json",
+    ".harness/TASKS.json",
+    ".harness/PROGRESS.md"
   ]
 }

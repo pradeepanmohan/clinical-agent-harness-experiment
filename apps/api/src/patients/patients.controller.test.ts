@@ -85,4 +85,57 @@ describe("PatientsController", () => {
       BadRequestException
     );
   });
+
+  it("lists all patients when no query is provided", () => {
+    const controller = createController();
+    const patient1 = controller.create({ fullName: "Alice Smith", email: "alice@example.com" });
+    const patient2 = controller.create({ fullName: "Bob Jones", phone: "555-0200" });
+
+    expect(controller.list()).toEqual([patient1, patient2]);
+  });
+
+  it("filters patients by full name case-insensitively", () => {
+    const controller = createController();
+    const patient1 = controller.create({ fullName: "Alice Smith" });
+    controller.create({ fullName: "Bob Jones" });
+
+    const results = controller.list("alice");
+    expect(results).toEqual([patient1]);
+  });
+
+  it("filters patients by email case-insensitively", () => {
+    const controller = createController();
+    const patient1 = controller.create({ fullName: "Alice Smith", email: "alice@example.com" });
+    controller.create({ fullName: "Bob Jones", email: "bob@example.com" });
+
+    const results = controller.list("ALICE@");
+    expect(results).toEqual([patient1]);
+  });
+
+  it("filters patients by phone", () => {
+    const controller = createController();
+    const patient1 = controller.create({ fullName: "Alice Smith", phone: "555-0100" });
+    controller.create({ fullName: "Bob Jones", phone: "555-0200" });
+
+    const results = controller.list("555-0100");
+    expect(results).toEqual([patient1]);
+  });
+
+  it("returns empty list when no patients match search query", () => {
+    const controller = createController();
+    controller.create({ fullName: "Alice Smith" });
+    controller.create({ fullName: "Bob Jones" });
+
+    const results = controller.list("Charlie");
+    expect(results).toEqual([]);
+  });
+
+  it("returns all patients when query is empty string", () => {
+    const controller = createController();
+    const patient1 = controller.create({ fullName: "Alice Smith" });
+    const patient2 = controller.create({ fullName: "Bob Jones" });
+
+    const results = controller.list("");
+    expect(results).toEqual([patient1, patient2]);
+  });
 });
