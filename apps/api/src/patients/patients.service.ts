@@ -26,8 +26,21 @@ export class PatientsService {
     return patient;
   }
 
-  list(): Patient[] {
-    return Array.from(this.patients.values());
+  list(query?: string): Patient[] {
+    const allPatients = Array.from(this.patients.values());
+
+    if (query === undefined || query.trim() === "") {
+      return allPatients;
+    }
+
+    const normalizedQuery = query.toLowerCase();
+    return allPatients.filter(patient => {
+      return (
+        patient.fullName.toLowerCase().includes(normalizedQuery) ||
+        (patient.email !== undefined && patient.email.toLowerCase().includes(normalizedQuery)) ||
+        (patient.phone !== undefined && patient.phone.toLowerCase().includes(normalizedQuery))
+      );
+    });
   }
 
   get(id: string): Patient {

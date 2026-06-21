@@ -64,6 +64,13 @@
       "status": "completed",
       "priority": 9,
       "taskFile": ".harness/tasks/strict-automation-proof.md"
+    },
+    {
+      "id": "S07",
+      "title": "Patient list search",
+      "status": "completed",
+      "priority": 10,
+      "taskFile": ".harness/tasks/S07-patient-search.md"
     }
   ]
 }

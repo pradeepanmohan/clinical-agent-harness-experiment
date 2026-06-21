@@ -4,8 +4,17 @@ export const dynamic = "force-dynamic";
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_CLINICAL_API_URL ?? "http://localhost:3001";
 
-export default async function PatientsPage() {
-  const { patients, error } = await fetchPatients();
+interface PatientsPageProps {
+  searchParams?: Promise<{ q?: string }>;
+}
+
+export default async function PatientsPage({ searchParams }: PatientsPageProps) {
+  const resolvedParams = await searchParams;
+  const query = resolvedParams?.q ?? "";
+  const { patients, error } = await fetchPatients(query);
+
+  const hasNoPatients = patients.length === 0 && query === "";
+  const hasNoSearchResults = patients.length === 0 && query !== "";
 
   return (
     <main>
@@ -14,10 +23,22 @@ export default async function PatientsPage() {
           <h1>Patients</h1>
           <a href="/patients/new">Create patient</a>
         </header>
+        <form action="/patients" method="get">
+          <input
+            type="search"
+            name="q"
+            placeholder="Search by name, email, or phone"
+            defaultValue={query}
+            aria-label="Search patients"
+          />
+          <button type="submit">Search</button>
+        </form>
         {error === undefined ? null : <p role="status">{error}</p>}
         <section aria-label="Patient list" className="status">
-          {patients.length === 0 ? (
+          {hasNoPatients ? (
             <p>No patients yet.</p>
+          ) : hasNoSearchResults ? (
+            <p>No patients match your search.</p>
           ) : (
             <ul>
               {patients.map((patient) => (
@@ -34,9 +55,14 @@ export default async function PatientsPage() {
   );
 }
 
-async function fetchPatients() {
+async function fetchPatients(query: string) {
   try {
-    const response = await fetch(`${apiBaseUrl}/patients`, { cache: "no-store" });
+    const url = new URL(`${apiBaseUrl}/patients`);
+    if (query !== "") {
+      url.searchParams.set("q", query);
+    }
+
+    const response = await fetch(url.toString(), { cache: "no-store" });
 
     if (!response.ok) {
       return { patients: [], error: "Unable to load patients." };

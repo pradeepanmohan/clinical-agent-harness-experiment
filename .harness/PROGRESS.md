@@ -94,9 +94,18 @@ After merging PR #38 (review artifact extraction recovery) and PR #41 (dispatch 
 - Loop continues until APPROVE or safety cap (3 non-approve reviews).
 - No manual branch recovery, review posting, or re-labeling required between automation steps.
 
+## Completed S07
+
+- Added patient search functionality via `GET /patients?q=<term>` endpoint.
+- Service filters patients by fullName, email, or phone case-insensitively.
+- Added search form to patient list page with input field named `q`.
+- Implemented distinct empty states: "No patients yet." vs "No patients match your search."
+- Added 6 API tests covering search behavior including case-insensitivity and no-match scenarios.
+- Ran S07 verification commands and wrote `.harness/evidence/S07-patient-search.md`.
+
 ## Next task
 
-Next task from `.harness/TASKS.json` after S06 human review and merge.
+Next task from `.harness/TASKS.json` after S07 human review and merge.
 
 ## Handoff note
 
