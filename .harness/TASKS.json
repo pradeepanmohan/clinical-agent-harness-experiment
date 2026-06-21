@@ -71,6 +71,13 @@
       "status": "completed",
       "priority": 10,
       "taskFile": ".harness/tasks/S07-patient-search.md"
+    },
+    {
+      "id": "S09",
+      "title": "Doctor list search by full name and specialty",
+      "status": "completed",
+      "priority": 11,
+      "taskFile": ".harness/tasks/S09-doctor-search.md"
     }
   ]
 }

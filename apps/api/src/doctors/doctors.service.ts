@@ -26,8 +26,20 @@ export class DoctorsService {
     return doctor;
   }
 
-  list(): Doctor[] {
-    return Array.from(this.doctors.values());
+  list(query?: string): Doctor[] {
+    const allDoctors = Array.from(this.doctors.values());
+
+    if (query === undefined || query.trim() === "") {
+      return allDoctors;
+    }
+
+    const normalizedQuery = query.toLowerCase();
+    return allDoctors.filter(doctor => {
+      return (
+        doctor.fullName.toLowerCase().includes(normalizedQuery) ||
+        doctor.specialty.toLowerCase().includes(normalizedQuery)
+      );
+    });
   }
 
   get(id: string): Doctor {
