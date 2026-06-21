@@ -83,6 +83,17 @@ The repository now has a minimal pnpm/Turbo monorepo with Next.js, NestJS, share
 - Documented the manual override path in `docs/HARNESS.md` and `docs/WORKFLOW.md`.
 - Wrote `.harness/evidence/S06-harness-hardening.md`.
 
+## Strict automation proof (Issue #42)
+
+After merging PR #38 (review artifact extraction recovery) and PR #41 (dispatch token for agent:fix queueing), the strict full automation loop has been validated:
+
+- Issue label `agent:implement` triggers Sandcastle implementation without manual intervention.
+- Workflow automatically queues `agent:review` after Verify passes.
+- Review verdict COMMENT or REQUEST_CHANGES triggers automatic `agent:fix`.
+- Fix commits run through Verify and Review again without manual re-trigger.
+- Loop continues until APPROVE or safety cap (3 non-approve reviews).
+- No manual branch recovery, review posting, or re-labeling required between automation steps.
+
 ## Next task
 
 Next task from `.harness/TASKS.json` after S06 human review and merge.

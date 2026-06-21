@@ -93,5 +93,13 @@
     ".harness/PROGRESS.md",
     "package.json",
     ".harness/TASKS.json"
+  ],
+  "42": [
+    "docs/HARNESS.md",
+    ".harness/PROGRESS.md",
+    ".harness/tasks/strict-automation-proof.md",
+    ".harness/policies/allowed-files.json",
+    ".harness/evidence/42-strict-automation-proof.md",
+    ".harness/TASKS.json"
   ]
 }
