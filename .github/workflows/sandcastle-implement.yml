@@ -232,6 +232,7 @@ jobs:
             echo "Could not find Sandcastle worktree for $BRANCH" >&2
             exit 1
           fi
+          rm -rf "$worktree/.pnpm-store"
           git -C "$worktree" status --short --branch
           (cd "$worktree" && pnpm harness:check -- --task "$TASK_ID" --base "$BASE_BRANCH")
 
