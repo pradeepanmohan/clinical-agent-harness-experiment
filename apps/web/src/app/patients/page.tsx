@@ -5,11 +5,12 @@ export const dynamic = "force-dynamic";
 const apiBaseUrl = process.env.NEXT_PUBLIC_CLINICAL_API_URL ?? "http://localhost:3001";
 
 interface PatientsPageProps {
-  searchParams?: { q?: string };
+  searchParams?: Promise<{ q?: string }>;
 }
 
 export default async function PatientsPage({ searchParams }: PatientsPageProps) {
-  const query = searchParams?.q ?? "";
+  const resolvedParams = await searchParams;
+  const query = resolvedParams?.q ?? "";
   const { patients, error } = await fetchPatients(query);
 
   const hasNoPatients = patients.length === 0 && query === "";

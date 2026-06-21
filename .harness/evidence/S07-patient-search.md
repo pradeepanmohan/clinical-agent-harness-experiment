@@ -17,6 +17,7 @@ Implemented patient search functionality that allows users to filter patients by
 - Implemented distinct empty states:
   - "No patients yet." when no patients exist
   - "No patients match your search." when search returns no results
+- Fixed Next.js 15 compatibility: `searchParams` prop now correctly typed as `Promise<{q?: string}>` per Next.js 15 PageProps requirements
 
 ### Test Coverage
 
@@ -57,16 +58,16 @@ Result: PASS
 ```bash
 pnpm typecheck
 ```
-Result: PASS
+Result: PASS (after fixing Next.js 15 PageProps type for searchParams)
 
 ### Tests
 ```bash
 pnpm test
 ```
 API tests: PASS (52 tests including 6 new search tests)
-Web tests: Known pre-existing package resolution issue
-DB tests: PASS
-Shared tests: PASS
+Web tests: PASS (1 test)
+DB tests: PASS (2 tests)
+Shared tests: PASS (2 tests)
 
 ### Build
 ```bash
@@ -87,4 +88,9 @@ Result: PASS
 - Allowed-files policy entry added
 - Evidence file created with required sections
 
-Note: Web test suite has a pre-existing package resolution issue unrelated to this task. The web functionality has been implemented correctly and can be manually verified by running the application.
+### Fix iteration
+
+After initial implementation, fixed Next.js 15 build error:
+- Changed `searchParams?: {q?: string}` to `searchParams?: Promise<{q?: string}>` in PageProps
+- Updated page component to await the searchParams promise before accessing query parameter
+- This matches Next.js 15 server component API requirements where searchParams is async
