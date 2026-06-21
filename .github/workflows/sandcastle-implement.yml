@@ -223,30 +223,34 @@ jobs:
           BASE_BRANCH: ${{ steps.base.outputs.base }}
         run: |
           set -euo pipefail
-          worktree=$(node -e "const fs=require('node:fs'); const p='.sandcastle/runtime/sandcastle-result.json'; const r=JSON.parse(fs.readFileSync(p,'utf8')); console.log(r.preservedWorktreePath || '')")
-          if [ -z "$worktree" ] || [ ! -d "$worktree" ]; then
-            safe_branch=$(printf '%s' "$BRANCH" | tr '/' '-')
-            worktree=".sandcastle/worktrees/$safe_branch"
+          if git checkout "$BRANCH"; then
+            task_root="."
+          else
+            task_root=$(git worktree list --porcelain | awk -v branch="refs/heads/$BRANCH" '$1 == "worktree" { path = $2 } $1 == "branch" && $2 == branch { print path }' | head -n 1)
+            if [ -z "$task_root" ] || [ ! -d "$task_root" ]; then
+              echo "Could not find Sandcastle branch checkout for $BRANCH" >&2
+              exit 1
+            fi
           fi
-          if [ ! -d "$worktree" ]; then
-            echo "Could not find Sandcastle worktree for $BRANCH" >&2
-            exit 1
-          fi
-          rm -rf "$worktree/.pnpm-store"
-          git -C "$worktree" status --short --branch
-          (cd "$worktree" && pnpm harness:check -- --task "$TASK_ID" --base "$BASE_BRANCH")
+          rm -rf "$task_root/.pnpm-store"
+          git -C "$task_root" status --short --branch
+          (cd "$task_root" && pnpm harness:check -- --task "$TASK_ID" --base "$BASE_BRANCH")
 
       - name: Push Sandcastle branch
         env:
           BRANCH: ${{ steps.branch.outputs.name }}
         run: |
           set -euo pipefail
-          worktree=$(node -e "const fs=require('node:fs'); const p='.sandcastle/runtime/sandcastle-result.json'; const r=JSON.parse(fs.readFileSync(p,'utf8')); console.log(r.preservedWorktreePath || '')")
-          if [ -z "$worktree" ] || [ ! -d "$worktree" ]; then
-            safe_branch=$(printf '%s' "$BRANCH" | tr '/' '-')
-            worktree=".sandcastle/worktrees/$safe_branch"
+          if git rev-parse --verify "$BRANCH" >/dev/null 2>&1; then
+            git push --force-with-lease origin "$BRANCH"
+          else
+            task_root=$(git worktree list --porcelain | awk -v branch="refs/heads/$BRANCH" '$1 == "worktree" { path = $2 } $1 == "branch" && $2 == branch { print path }' | head -n 1)
+            if [ -z "$task_root" ] || [ ! -d "$task_root" ]; then
+              echo "Could not find Sandcastle branch checkout for $BRANCH" >&2
+              exit 1
+            fi
+            git -C "$task_root" push --force-with-lease origin "$BRANCH"
           fi
-          git -C "$worktree" push --force-with-lease origin "$BRANCH"
 
       - name: Trigger Verify for Sandcastle branch
         env:
