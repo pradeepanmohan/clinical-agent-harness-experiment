@@ -218,9 +218,13 @@ jobs:
 
       - name: Run harness discipline checks
         env:
+          BRANCH: ${{ steps.branch.outputs.name }}
           TASK_ID: ${{ steps.task.outputs.id }}
           BASE_BRANCH: ${{ steps.base.outputs.base }}
-        run: pnpm harness:check -- --task "$TASK_ID" --base "$BASE_BRANCH"
+        run: |
+          set -euo pipefail
+          git checkout "$BRANCH"
+          pnpm harness:check -- --task "$TASK_ID" --base "$BASE_BRANCH"
 
       - name: Push Sandcastle branch
         env:
