@@ -38,13 +38,25 @@ A long-running task should be split into short agent sessions. Each Codex run re
 ```txt
 PRD
 -> task queue
--> one bounded Codex run
+-> one bounded agent run
 -> verification
 -> evidence
 -> PR
--> human review
--> next task
+-> separate review
+-> optional fix loop
+-> human merge gate
+-> final main verification
 ```
+
+## Final report
+
+The experiment report is here:
+
+```txt
+docs/EXPERIMENT_REPORT.md
+```
+
+It captures the final state, proof timeline, failure modes, and reusable Sandcastle label-harness pattern.
 
 ## First milestone
 
