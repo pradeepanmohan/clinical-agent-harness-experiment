@@ -145,6 +145,6 @@ The generated artifact is a static HTML/D3 site with four reviewer views:
 GitHub Actions integration is intentionally split:
 
 - `.github/workflows/pr-walkthrough.yml` runs with read-only repository permissions, generates `.harness/pr-walkthrough/index.html`, validates the artifact shape, and uploads it as an Actions artifact.
-- `.github/workflows/pr-walkthrough-publish.yml` is manual-only and has write permissions. It can comment with the artifact run. Publishing to `gh-pages` is opt-in via `publish_to_pages=true` because private/client PR context may be sensitive.
+- `.github/workflows/pr-walkthrough-publish.yml` is manual-only and has write permissions. It downloads the artifact, posts/updates a sticky PR comment, and patches a marker-based `## PR Walkthrough` section into the PR description. Publishing to `gh-pages` is opt-in via `publish_to_pages=true` because private/client PR context may be sensitive.
 
-This is an orientation aid, not a review verdict. Human review and merge approval remain separate gates.
+The PR description section is the permanent reviewer pointer. The sticky comment is the auto-updated live location after the artifact exists. This is an orientation aid, not a review verdict. Human review and merge approval remain separate gates.
