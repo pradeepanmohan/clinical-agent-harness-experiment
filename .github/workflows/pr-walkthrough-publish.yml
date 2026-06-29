@@ -90,3 +90,62 @@ jobs:
           else
             gh pr comment "$PR_NUMBER" --body-file "$body_file"
           fi
+
+      - name: Update PR body with walkthrough pointer
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ inputs.pr_number }}
+          RUN_ID: ${{ inputs.run_id }}
+          PUBLISH_TO_PAGES: ${{ inputs.publish_to_pages }}
+        run: |
+          set -euo pipefail
+          marker_start="<!-- pr-walkthrough-preview:start -->"
+          marker_end="<!-- pr-walkthrough-preview:end -->"
+          artifact_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}"
+          pages_url="https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}/pr-walkthrough/pr-${PR_NUMBER}/"
+          current_body="${RUNNER_TEMP}/pr-body-current.md"
+          section_file="${RUNNER_TEMP}/pr-walkthrough-section.md"
+          updated_body="${RUNNER_TEMP}/pr-body-updated.md"
+
+          gh pr view "$PR_NUMBER" --json body --jq '.body // ""' > "$current_body"
+
+          {
+            echo "$marker_start"
+            echo "## PR Walkthrough"
+            echo
+            echo "A static interactive PR walkthrough artifact was generated for this PR."
+            echo
+            echo "- Artifact run: ${artifact_url}"
+            if [ "$PUBLISH_TO_PAGES" = "true" ]; then
+              echo "- GitHub Pages preview: ${pages_url}"
+              echo
+              echo "Review the Pages URL only if this PR is safe to expose through the repository Pages settings."
+            else
+              echo "- GitHub Pages publishing was intentionally skipped. Download the artifact from the run above."
+            fi
+            echo "$marker_end"
+          } > "$section_file"
+
+          python3 - "$current_body" "$section_file" "$updated_body" <<'PY'
+          import re
+          import sys
+          from pathlib import Path
+
+          body_path, section_path, out_path = map(Path, sys.argv[1:])
+          body = body_path.read_text()
+          section = section_path.read_text().strip()
+          pattern = re.compile(
+              r"<!-- pr-walkthrough-preview:start -->.*?<!-- pr-walkthrough-preview:end -->",
+              re.DOTALL,
+          )
+          if pattern.search(body):
+              updated = pattern.sub(section, body)
+          else:
+              updated = body.rstrip()
+              if updated:
+                  updated += "\n\n"
+              updated += section
+          Path(out_path).write_text(updated.rstrip() + "\n")
+          PY
+
+          gh pr edit "$PR_NUMBER" --body-file "$updated_body"
